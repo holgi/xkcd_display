@@ -2,6 +2,7 @@
 
 import click
 import contextlib
+import signal
 import tempfile
 import time
 
@@ -27,8 +28,11 @@ def start(context):
 
     This will start to render dialogs and show them on the display
     """
-    click.echo("starting xkcd service")
-    context.obj.start()
+    if context.obj.is_running():
+        click.echo("xkcd service already running")
+    else:
+        click.echo("starting xkcd service")
+        context.obj.start()
 
 
 @cli.command(short_help="stop the xkcd display service")
@@ -39,8 +43,11 @@ def stop(context):
     This will stop the display service after the last panel of the current
     dialog was displayed.
     """
-    click.echo("stopping xkcd servie")
-    context.obj.stop()
+    if context.obj.is_running():
+        click.echo("stopping xkcd servie")
+        context.obj.stop()
+    else:
+        click.echo("xkcd service not running")
 
 
 @cli.command(short_help="is the xkcd display service running?")
@@ -61,7 +68,11 @@ def reload(context):
     The configuration and dialogs are reloaded after the current dialog is
     finished. Useful if new dialogs are added.
     """
-    click.echo("gracefully reloading changes")
+    if context.obj.is_running():
+        click.echo("gracefully reloading changes")
+        context.obj.send_signal(signal.SIGHUP)
+    else:
+        click.echo("xkcd service not running")
 
 
 @cli.command(short_help="test render one dialog")
