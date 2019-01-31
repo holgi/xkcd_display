@@ -3,11 +3,15 @@
 import textwrap
 
 from collections import namedtuple
+from pathlib import Path
 from wand.color import Color
 from wand.drawing import Drawing
 from wand.image import Image
 
 from . import Size
+
+# set the path to the xkcd font file
+XKCD_FONT_FILE = str(Path(__file__).parent / "xkcd-script.ttf")
 
 
 FontMetrics = namedtuple(
@@ -173,7 +177,7 @@ def render_text(
         # specifies the baseline of the first line of text
         # this must be adjusted with the character height of the text
         x = (img.width - best_fit.width) // 2
-        unadjusted_y = (img.height - img.height) // 2
+        unadjusted_y = (img.height - best_fit.height) // 2
         y = unadjusted_y + best_fit.character_height
 
         # render the text and  return the image
@@ -221,7 +225,7 @@ def render_xkcd_image(text):
     """
     return create_image_blob(
         text,
-        "xkcd-script.ttf",
+        XKCD_FONT_FILE,
         Size(width=400, height=300),
         background_color="white",
         format="png",
