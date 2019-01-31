@@ -16,7 +16,10 @@ from . import display
 @click.group()
 @click.pass_context
 def cli(context):
-    """ controll the dedicated xkcd display """
+    """ controll the dedicated xkcd display
+
+    :param click.Context context: command line context
+    """
     context.ensure_object(display.XKCDDisplayService)
     context.obj = display.XKCDDisplayService()
 
@@ -27,6 +30,8 @@ def start(context):
     """ starts the xkcd display service
 
     This will start to render dialogs and show them on the display
+
+    :param click.Context context: command line context
     """
     if context.obj.is_running():
         click.echo("xkcd service already running")
@@ -42,6 +47,8 @@ def stop(context):
 
     This will stop the display service after the last panel of the current
     dialog was displayed.
+
+    :param click.Context context: command line context
     """
     if context.obj.is_running():
         click.echo("stopping xkcd servie")
@@ -53,7 +60,10 @@ def stop(context):
 @cli.command(short_help="is the xkcd display service running?")
 @click.pass_context
 def status(context):
-    """ reports if the xkcd display service is running """
+    """ reports if the xkcd display service is running
+
+    :param click.Context context: command line context
+    """
     if context.obj.is_running():
         click.echo(click.style("xkcd service is running.", fg="green"))
     else:
@@ -67,6 +77,8 @@ def reload(context):
 
     The configuration and dialogs are reloaded after the current dialog is
     finished. Useful if new dialogs are added.
+
+    :param click.Context context: command line context
     """
     if context.obj.is_running():
         click.echo("gracefully reloading changes")
@@ -102,6 +114,11 @@ def render(context, show, outdir, dialogfile):
 
     If now output directory is set, the images are rendered to a temporary
     directory and are shown even if --quite is selected.
+
+    :param click.Context context: command line context
+    :param bool show: show the image in the default image viewer
+    :param str outdir: where to save the images
+    :param str diaglogfile: path to the dialog text file
     """
     if outdir:
         context_manager = contextlib.nullcontext(outdir)

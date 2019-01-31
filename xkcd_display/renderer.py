@@ -29,12 +29,12 @@ RenderingFit = namedtuple(
 def eval_text_metrics(sketch, img, text):
     """ Quick helper function to calculate width/height of rendered text.
 
-    sketch: a wand.drawing.Drawing instance
-    img: a wand.image.Image instance
-    text: the text to render
-    returns: a "FontMetrics" named tuple
-
     note: this relies on font properties already set on the sketch
+
+    :param wand.drawing.Drawing sketch: a wand.drawing.Drawing instance
+    :param wand.image.Image img: a wand.image.Image instance
+    :param str text: the text to render
+    :returns FontMetrics: metrics for the text
     """
     metrics = sketch.get_font_metrics(img, text, multiline=True)
     return FontMetrics(
@@ -47,8 +47,8 @@ def eval_text_metrics(sketch, img, text):
 def unique_text_wraps(text):
     """ Find all unique wraps of a text
 
-    text: text to wrap, words a preserved
-    returns: iterator of uniquely wrapped lines
+    :param str text: text to wrap, words a preserved
+    :returns iterator: uniquely wrapped lines
     """
     lines_checked = set()
     for wrap_at in range(1, len(text) + 1):
@@ -60,15 +60,15 @@ def unique_text_wraps(text):
 
 
 def find_best_fitting_text_wrap(sketch, img, max_size, text):
-    """ returns the best fitting way to wrap a text inside a box
-
-    sketch: a wand.drawing.Drawing instance
-    img: a wand.image.Image instance
-    max_size: the largest size a text should have, a FontMetrics named tuple
-    text: the text fit
-    returns: the wrapped text lines for the best possible fit
+    """ Find the best fitting way to wrap a text inside a box
 
     note: this relies on font properties already set on the sketch
+
+    :param wand.drawing.Drawing sketch: a wand.drawing.Drawing instance
+    :param wand.image.Image img: a wand.image.Image instance
+    :param Size max_size: the largest size a text should have
+    :param str text: the text to render
+    :returns list: the wrapped text lines for the best possible fit
     """
     expected_ratio = max_size.width / max_size.height
     for wrapped_lines in unique_text_wraps(text):
@@ -84,10 +84,10 @@ def find_best_fitting_text_wrap(sketch, img, max_size, text):
 def font_sizes(start, stop, factor=1.2):
     """ iterator for gently increasing font sizes
 
-    start: start value, ineger
-    stop: upper limit of font size, integer
-    factor: factor for increasing the font size
-    returns: integer
+    :param int start: start value
+    :param int stop: upper limit of font size
+    :param float factor: factor for increasing the font size
+    :returns iterator: font sizes
     """
     font_size = int(start)
     while font_size < stop:
@@ -101,16 +101,14 @@ def font_sizes(start, stop, factor=1.2):
 def find_best_text_fit(sketch, img, max_size, text):
     """ returns the best way for a text to still fit in a area
 
-
-    sketch: a wand.drawing.Drawing instance
-    img: a wand.image.Image instance
-    max_size: the largest size a text should have, a FontMetrics named tuple
-    text: the text fit
-    returns: a BestTextFit named tuple with the needed parameters
-
     note: this relies on font properties already set on the sketch
-    """
 
+    :param wand.drawing.Drawing sketch: a wand.drawing.Drawing instance
+    :param wand.image.Image img: a wand.image.Image instance
+    :param Size max_size: the largest size a text should have
+    :param str text: the text to render
+    :returns BestTextFit: parameters needed for rendering a text on a image
+    """
     # wrap the text in a best fitting style
     lines = find_best_fitting_text_wrap(sketch, img, max_size, text)
     wrapped_text = "\n".join(lines)
@@ -146,17 +144,18 @@ def render_text(
 ):
     """ renders a text as large as possible on a provided image
 
-    img: a wand.image.Image instance
-    text: the text to render
-    font: font to use, path to a font file
+    :param wand.image.Image img: a wand.image.Image instance
+    :param str text: the text to render
+    :param str font: path to a font file to use
 
     optional:
-    antialias: use antialiasing, defaults to True
-    padding: padding to apply to the image for the text rendering
-    color: text color to use
-    font_size_hint: font size used as a starting point for the search of the
-        largest font size, also used for finding the best way to wrap a text.
-    returns: parameters used to render the text on the image
+    :param bool antialias: use antialiasing, defaults to True
+    :param int padding: padding to apply to the image for the text rendering
+    :param str color: text color to use
+    :param int font_size_hint: font
+        size used as a starting point for the search of the largest font size,
+        also used for finding the best way to wrap a text.
+    :returns RenderingFit: parameters used to render the text on the image
     """
 
     box_size = Size(img.width - 2 * padding, img.height - 2 * padding)
@@ -198,14 +197,16 @@ def create_image_blob(
 ):
     """ renders a text as an image and returns its binary representation
 
-    text: the text to render
-    font: the font to use, path to a font file
-    image_size: image size, provided as a "Size" named tuple
-    background_color: background color for the image, use None for a
-        transparent background
-    format: binary representation format of the image
+    :param str text: the text to render
+    :param str font: path to a font file
+    :param Size image_size: image size
+    :param str background_color:
+        background color for the image, use None for a transparent background,
+        defaults to "white"
+    :param str format:
+        binary representation format of the image, default to "png"
 
-    all other keyword parameters are passed to the render_text() function
+    all other keyword parameters are forwarded to the render_text() function
     """
     if background_color is not None:
         background_color = Color(background_color)
@@ -222,6 +223,8 @@ def render_xkcd_image(text):
     """ returns a image blob with text rendered as large as possible
 
     parameters are fitting the xkcd display
+
+    :param str text: the text to render
     """
     return create_image_blob(
         text,

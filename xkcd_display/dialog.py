@@ -9,8 +9,8 @@ SpokenText = namedtuple("NarratedText", ["speaker", "text"])
 def parse_dialog(raw_text):
     """ parses a raw dialog text
 
-    raw_text: text of the dialog
-    resturns: list of SpokenText named tuples
+    :param str raw_text: text of the dialog
+    :returns list: list of SpokenText named tuples
     """
     stripped = raw_text.strip()
     raw_split = (line.split(":", 1) for line in stripped.split("\n"))
@@ -23,8 +23,8 @@ def parse_dialog(raw_text):
 def adjust_narrators(transcript):
     """ adjusts the names of the speakers to be "cueball" or "megan"
 
-    transcript: list of SpokenText named tuples
-    returns: list of SpokenText named tuples with adjusted speakers
+    :param list transcript: list of SpokenText named tuples
+    :returns: list of SpokenText named tuples with adjusted speakers
     """
     speakers = {spoken_line.speaker.lower() for spoken_line in transcript}
     if len(speakers) != 2:
