@@ -9,41 +9,53 @@ from pathlib import Path
 
 from . import dialog
 from . import renderer
+from . import display
 
 
 @click.group()
-def cli():
+@click.pass_context
+def cli(context):
     """ controll the dedicated xkcd display """
-    pass
+    context.ensure_object(display.XKCDDisplayService)
+    context.obj = display.XKCDDisplayService()
 
 
 @cli.command(short_help="start the xkcd display service")
-def start():
+@click.pass_context
+def start(context):
     """ starts the xkcd display service
 
     This will start to render dialogs and show them on the display
     """
     click.echo("starting xkcd service")
+    context.obj.start()
 
 
 @cli.command(short_help="stop the xkcd display service")
-def stop():
+@click.pass_context
+def stop(context):
     """ stop the xkcd display service
 
     This will stop the display service after the last panel of the current
     dialog was displayed.
     """
     click.echo("stopping xkcd servie")
+    context.obj.stop()
 
 
 @cli.command(short_help="is the xkcd display service running?")
-def status():
+@click.pass_context
+def status(context):
     """ reports if the xkcd display service is running """
-    click.echo("reporting xkcd service status")
+    if context.obj.is_running():
+        click.echo(click.style("xkcd service is running.", fg="green"))
+    else:
+        click.echo(click.style("xkcd service stopped.", fg="red"))
 
 
 @cli.command(short_help="gracefully reload the xkcd display service")
-def reload():
+@click.pass_context
+def reload(context):
     """ will gracefully reload the xkcd display service
 
     The configuration and dialogs are reloaded after the current dialog is
@@ -54,9 +66,7 @@ def reload():
 
 @cli.command(short_help="test render one dialog")
 @click.option(
-    "--show",
-    is_flag=True,
-    help="open the generated images [default: don't]",
+    "--show", is_flag=True, help="open the generated images [default: don't]"
 )
 @click.option(
     "--outdir",
@@ -72,7 +82,8 @@ def reload():
         exists=True, file_okay=True, dir_okay=False, readable=True
     ),
 )
-def render(show, outdir, dialogfile):
+@click.pass_context
+def render(context, show, outdir, dialogfile):
     """ will render one dialog to panel images in a directory
 
     Use this after a new dialog has been added before using the display service
