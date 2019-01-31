@@ -16,6 +16,9 @@ pytest-cov = "^2.6"
 flake8 = "^3.7"
 # black = "^18"  # poetry just won't install black, installed it with pip
 
+[tool.poetry.scripts]
+xkcd = 'xkcd_display.cli:cli'
+
 [tool.black]
 line-length = 79
 py37 = true
