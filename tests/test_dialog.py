@@ -89,4 +89,4 @@ def test_adjust_narrators_to_many_narrators():
         Third Person: I learned it last night!
         """
     with pytest.raises(ValueError):
-        transcript = adjust_narrators(parse_dialog(dialog))
+        adjust_narrators(parse_dialog(dialog))

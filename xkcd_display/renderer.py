@@ -175,8 +175,8 @@ def render_text(
         # the y value used in sketch.text() method to render the text
         # specifies the baseline of the first line of text
         # this must be adjusted with the character height of the text
-        x = (img.width - best_fit.width) // 2
-        unadjusted_y = (img.height - best_fit.height) // 2
+        x = (box_size.width - best_fit.width) // 2
+        unadjusted_y = (box_size.height - best_fit.height) // 2
         y = unadjusted_y + best_fit.character_height
 
         # render the text and  return the image

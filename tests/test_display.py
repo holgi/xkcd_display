@@ -123,7 +123,9 @@ def test_run_no_reload(tmp_path, mocker):
     mocker.patch.object(XKCDDisplayService, "_show_break_picture")
     mocker.patch.object(XKCDDisplayService, "_show_goodbye_picture")
     mocker.patch.object(XKCDDisplayService, "_clear_cache")
-    mocker.patch.object(XKCDDisplayService, "_get_dialog_files", return_value=[dialog_file])
+    mocker.patch.object(
+        XKCDDisplayService, "_get_dialog_files", return_value=[dialog_file]
+    )
 
     XKCDDisplayService().run(tmp_path)
 
@@ -152,7 +154,9 @@ def test_run_with_reload(tmp_path, mocker):
     mocker.patch.object(XKCDDisplayService, "_show_break_picture")
     mocker.patch.object(XKCDDisplayService, "_show_goodbye_picture")
     mocker.patch.object(XKCDDisplayService, "_clear_cache")
-    mocker.patch.object(XKCDDisplayService, "_get_dialog_files", return_value=[dialog_file])
+    mocker.patch.object(
+        XKCDDisplayService, "_get_dialog_files", return_value=[dialog_file]
+    )
 
     XKCDDisplayService().run(tmp_path)
 
@@ -163,5 +167,3 @@ def test_run_with_reload(tmp_path, mocker):
     assert XKCDDisplayService._get_dialog_files.call_count == 2
     XKCDDisplayService._show_goodbye_picture.assert_called_once()
     XKCDDisplayService._clear_cache.assert_called_once()
-
-
