@@ -15,7 +15,7 @@ from . import display
 
 @click.group()
 @click.pass_context
-def cli(context):
+def xkcd(context):
     """ controll the dedicated xkcd display
 
     :param click.Context context: command line context
@@ -24,7 +24,7 @@ def cli(context):
     context.obj = display.XKCDDisplayService()
 
 
-@cli.command(short_help="start the xkcd display service")
+@xkcd.command(short_help="start the xkcd display service")
 @click.pass_context
 def start(context):
     """ starts the xkcd display service
@@ -37,10 +37,10 @@ def start(context):
         click.echo("xkcd service already running")
     else:
         click.echo("starting xkcd service")
-        context.obj.start()
+        context.obj.start(dialogs_directory=".")
 
 
-@cli.command(short_help="stop the xkcd display service")
+@xkcd.command(short_help="stop the xkcd display service")
 @click.pass_context
 def stop(context):
     """ stop the xkcd display service
@@ -57,7 +57,7 @@ def stop(context):
         click.echo("xkcd service not running")
 
 
-@cli.command(short_help="is the xkcd display service running?")
+@xkcd.command(short_help="is the xkcd display service running?")
 @click.pass_context
 def status(context):
     """ reports if the xkcd display service is running
@@ -67,10 +67,10 @@ def status(context):
     if context.obj.is_running():
         click.echo(click.style("xkcd service is running.", fg="green"))
     else:
-        click.echo(click.style("xkcd service stopped.", fg="red"))
+        click.echo(click.style("xkcd service is stopped.", fg="red"))
 
 
-@cli.command(short_help="gracefully reload the xkcd display service")
+@xkcd.command(short_help="gracefully reload the xkcd display service")
 @click.pass_context
 def reload(context):
     """ will gracefully reload the xkcd display service
@@ -87,7 +87,7 @@ def reload(context):
         click.echo("xkcd service not running")
 
 
-@cli.command(short_help="test render one dialog")
+@click.command()
 @click.option(
     "--show", is_flag=True, help="open the generated images [default: don't]"
 )
@@ -105,8 +105,7 @@ def reload(context):
         exists=True, file_okay=True, dir_okay=False, readable=True
     ),
 )
-@click.pass_context
-def render(context, show, outdir, dialogfile):
+def xkcdtest(show, outdir, dialogfile):
     """ will render one dialog to panel images in a directory
 
     Use this after a new dialog has been added before using the display service
@@ -120,15 +119,16 @@ def render(context, show, outdir, dialogfile):
     :param str outdir: where to save the images
     :param str diaglogfile: path to the dialog text file
     """
-    if outdir:
-        context_manager = contextlib.nullcontext(outdir)
-    else:
-        context_manager = tempfile.TemporaryDirectory()
+
+    if not outdir:
         show = True
+    click.echo("show:" + str(show))
 
     dialog_path = Path(dialogfile)
     raw_transcript = dialog.parse_dialog(dialog_path.read_text())
     transcript = dialog.adjust_narrators(raw_transcript)
+
+    context_manager = _get_directory_context_manager(outdir)
 
     with context_manager as output_dir_name:
         output_dir = Path(output_dir_name)
@@ -147,3 +147,16 @@ def render(context, show, outdir, dialogfile):
         # the temporary directory might be removed in the meanwhile
         if not outdir:
             time.sleep(2)
+
+
+def _get_directory_context_manager(outdir):
+    """ returns a context manager for the output directory
+
+    This unifies the interface for a temporary directory and a normal one
+
+    :param str outdir: path to the output directory or None
+    """
+    if outdir:
+        return contextlib.nullcontext(outdir)
+    else:
+        return tempfile.TemporaryDirectory()

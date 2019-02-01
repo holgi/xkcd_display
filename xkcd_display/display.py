@@ -8,54 +8,58 @@ import tempfile
 
 from logging.handlers import SysLogHandler
 from pathlib import Path
-from service import find_syslog, Service
 
 from . import dialog
 from . import renderer
+from .service import find_syslog, Service
 
 
 class XKCDDisplayService(Service):
     """ background service to drive and controll the xkcd display"""
 
-    def __init__(self, dialogs_directory):
-        """ initialize the display
-
-        :param str dialogs_directory:
-            directory that holds the dialog textfiles
-        """
+    def __init__(self):
+        """ initialize the display """
         super().__init__(name="xkcdd", pid_dir="/tmp")
+        self.logger.addHandler(logging.FileHandler("debug.log"))
+        self.logger.setLevel(logging.DEBUG)
+        return
         self.logger.addHandler(
             SysLogHandler(
                 address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
             )
         )
         self.logger.setLevel(logging.INFO)
-        self.dialogs_directory = Path(dialogs_directory)
 
-    def run(self):
+    def run(self, dialogs_directory):
         """ main (background) function to run the display service
 
-        This function needs to be defined for service.Service
+        This function needs to be defined for service.Service.
+
+        :param str dialogs_directory:
+            directory that holds the dialog textfiles
         """
+        dialogs_directory = Path(dialogs_directory)
         with tempfile.TemporaryDirectory() as cache_dir:
             chache_path = Path(cache_dir)
-            dialog_files = self._get_dialog_files()
+            dialog_files = self._get_dialog_files(dialogs_directory)
             while not self.got_sigterm():
                 if self.got_signal(signal.SIGHUP, clear=True):
-                    dialog_files = self._get_dialog_files()
+                    dialog_files = self._get_dialog_files(dialogs_directory)
                     self._clear_cache(chache_path)
                 selected = random.choice(dialog_files)
                 self._display_dialog(chache_path, selected)
                 self._show_break_picture(selected)
             self._show_goodbye_picture()
 
-    def _get_dialog_files(self):
+    def _get_dialog_files(self, dialogs_directory):
         """ gets all available dialog text files
 
+        :param str dialogs_directory:
+            directory that holds the dialog textfiles
         :returns list: list of dialog text file paths
         """
         self.logger.info("reading dialog files")
-        all = (f for f in self.dialogs_directory.iterdir() if f.is_file())
+        all = (f for f in dialogs_directory.iterdir() if f.is_file())
         visible = (f for f in all if not f.stem.startswith("."))
         texts = (f for f in visible if f.suffix == ".txt")
         return list(texts)
