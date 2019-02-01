@@ -22,13 +22,13 @@ class XKCDDisplayService(Service):
         super().__init__(name="xkcdd", pid_dir="/tmp")
         self.logger.addHandler(logging.FileHandler("debug.log"))
         self.logger.setLevel(logging.DEBUG)
-        return
-        self.logger.addHandler(
-            SysLogHandler(
-                address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
-            )
-        )
-        self.logger.setLevel(logging.INFO)
+
+        # self.logger.addHandler(
+        #     SysLogHandler(
+        #         address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
+        #     )
+        # )
+        # self.logger.setLevel(logging.INFO)
 
     def run(self, dialogs_directory):
         """ main (background) function to run the display service
@@ -42,13 +42,15 @@ class XKCDDisplayService(Service):
         with tempfile.TemporaryDirectory() as cache_dir:
             chache_path = Path(cache_dir)
             dialog_files = self._get_dialog_files(dialogs_directory)
+            old_selected = None
             while not self.got_sigterm():
                 if self.got_signal(signal.SIGHUP, clear=True):
                     dialog_files = self._get_dialog_files(dialogs_directory)
                     self._clear_cache(chache_path)
-                selected = random.choice(dialog_files)
-                self._display_dialog(chache_path, selected)
-                self._show_break_picture(selected)
+                new_selected = random.choice(dialog_files)
+                self._show_break_picture(old_selected, new_selected)
+                self._display_dialog(chache_path, new_selected)
+                old_selected = new_selected
             self._show_goodbye_picture()
 
     def _get_dialog_files(self, dialogs_directory):
@@ -126,10 +128,11 @@ class XKCDDisplayService(Service):
             cache_file.write_bytes(blob)
             return blob
 
-    def _show_break_picture(self, selected):
+    def _show_break_picture(self, old_selected, new_selected):
         """ displays a picture in between two dialogs
 
-        :param pathlib.Path selected: path to the last shown dialog
+        :param pathlib.Path old_selected: path to the last shown dialog
+        :param pathlib.Path new_selected: path to the upcoming dialog
         """
         # TODO: implement something nice
         # TODO: show image on ePaper display

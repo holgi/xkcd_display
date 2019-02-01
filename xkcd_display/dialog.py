@@ -26,7 +26,12 @@ def adjust_narrators(transcript):
     :param list transcript: list of SpokenText named tuples
     :returns: list of SpokenText named tuples with adjusted speakers
     """
-    speakers = {spoken_line.speaker.lower() for spoken_line in transcript}
+    # used a set first, but ordering ist not supported *sigh*
+    speakers = []
+    for spoken_line in transcript:
+        speaker = spoken_line.speaker.lower()
+        if speaker not in speakers:
+            speakers.append(speaker)
     if len(speakers) != 2:
         raise ValueError(f"Wrong number of speakers: {len(speakers)}")
 
