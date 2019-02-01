@@ -54,7 +54,7 @@ lint: ## check style with flake8
 	flake8 xkcd_display tests
 
 test: ## run tests quickly with the default Python
-	py.test -x
+	py.test -x --disable-warnings
 
 coverage: ## check code coverage with the default Python
 	coverage run --source xkcd_display -m pytest
