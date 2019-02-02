@@ -1,7 +1,7 @@
 import pytest
 import click
 from click.testing import CliRunner
-from unittest.mock import ANY, call
+from unittest.mock import call
 
 
 def test_xkcd_start_already_running(mocker):
@@ -54,7 +54,6 @@ def test_xkcd_stop_running(mocker):
     assert XKCDDisplayService.is_running.call_args == call()
     assert XKCDDisplayService.stop.call_count == 1
     assert XKCDDisplayService.stop.call_args == call()
-
 
 
 def test_xkcd_stop_not_running(mocker):
@@ -174,8 +173,9 @@ def test_xkcdtest_show_no_outdir(cli_args, showed, slept, mocker):
     assert Path.write_bytes.call_count == 2
     assert xkcd_display.renderer.render_xkcd_image.call_count == 2
     assert xkcd_display.renderer.render_xkcd_image.call_args_list == [
-        call("yeah"), call("sigh")
-        ]
+        call("yeah"),
+        call("sigh"),
+    ]
     if showed:
         assert click.launch.call_count == 2
     else:
