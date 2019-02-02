@@ -122,7 +122,6 @@ def xkcdtest(show, outdir, dialogfile):
 
     if not outdir:
         show = True
-    click.echo("show:" + str(show))
 
     dialog_path = Path(dialogfile)
     raw_transcript = dialog.parse_dialog(dialog_path.read_text())

@@ -114,7 +114,7 @@ def find_best_text_fit(sketch, img, max_size, text):
     wrapped_text = "\n".join(lines)
     best_fit = None
     # increase the font size and check if it still fits in max_size
-    for font_size in font_sizes(start=sketch.font_size, stop=img.height):
+    for font_size in font_sizes(start=sketch.font_size, stop=max_size.height):
         sketch.font_size = font_size
         size = eval_text_metrics(sketch, img, wrapped_text)
         if max_size.width < size.width or max_size.height < size.height:

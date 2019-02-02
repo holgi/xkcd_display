@@ -162,9 +162,9 @@ def test_find_best_text_fit(mocker):
             self.font_size = 1
 
     sketch = MockSketch()
-    image = Size(width=20, height=20)
+    max_size = Size(width=4, height=4)
 
-    result = find_best_text_fit(sketch, image, Size(width=4, height=4), "")
+    result = find_best_text_fit(sketch, "image", max_size, "text")
 
     assert isinstance(result, TextFitParameter)
     assert result.lines == lines
@@ -184,10 +184,10 @@ def test_find_best_raises_value_error(mocker):
     mocker.patch("xkcd_display.renderer.find_best_fitting_text_wrap")
     mocker.patch("xkcd_display.renderer.font_sizes", return_value=[])
     sketch = mock_tuple(font_size=1)
-    image = mock_tuple(height=1)
+    max_size = mock_tuple(height=1)
 
     with pytest.raises(ValueError):
-        find_best_text_fit(sketch, image, "size", "text")
+        find_best_text_fit(sketch, "image", max_size, "text")
 
 
 def test_render_text(mocker):
