@@ -3,7 +3,7 @@
 from collections import namedtuple
 
 
-SpokenText = namedtuple("NarratedText", ["speaker", "text"])
+SpokenText = namedtuple("SpokenText", ["speaker", "text"])
 
 
 def parse_dialog(raw_text):

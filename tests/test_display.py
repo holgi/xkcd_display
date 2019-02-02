@@ -3,6 +3,7 @@ import tempfile
 import time
 
 from pathlib import Path
+from unittest.mock import ANY, call
 
 
 EXAMPLE_DIALOG = """
@@ -45,6 +46,7 @@ def test_clear_cache(tmp_path):
 
 def test_display_dialog(tmp_path, mocker):
     from xkcd_display.display import XKCDDisplayService
+    from xkcd_display.dialog import SpokenText
 
     mocker.patch.object(XKCDDisplayService, "_display_image")
     mocker.patch("time.sleep")
@@ -54,7 +56,15 @@ def test_display_dialog(tmp_path, mocker):
     XKCDDisplayService()._display_dialog(tmp_path, dialog_file)
 
     assert XKCDDisplayService._display_image.call_count == 3
+    assert XKCDDisplayService._display_image.call_args_list == [
+        call(ANY, "one_dialog", 0, SpokenText(speaker='cueball', text="You're flying! How?")),
+        call(ANY, "one_dialog", 1, SpokenText(speaker='megan', text="Python!")),
+        call(ANY, "one_dialog", 2, SpokenText(speaker='megan', text="I learned it last night!")),
+    ]
     assert time.sleep.call_count == 3
+    assert time.sleep.call_args_list == [
+        call(6), call(5), call(7)
+    ]
 
 
 def test_display_image(mocker):
@@ -64,7 +74,8 @@ def test_display_image(mocker):
 
     XKCDDisplayService()._display_image("cache_dir", 12, 3, "*sigh")
 
-    XKCDDisplayService._render.assert_called_once_with(
+    assert XKCDDisplayService._render.call_count == 1
+    assert XKCDDisplayService._render.call_args == call(
         "cache_dir", 12, 3, "*sigh"
     )
 
@@ -83,9 +94,13 @@ def test_render_cached(tmp_path, mocker):
     result = XKCDDisplayService()._render(tmp_path, 12, 3, SpokenText("", ""))
 
     assert result == "cache"
-    Path.exists.assert_called_once()
-    Path.read_bytes.assert_called_once()
-    Path.write_bytes.assert_not_called()
+    from xkcd_display.renderer import render_xkcd_image
+    assert render_xkcd_image.call_count == 0
+    assert Path.exists.call_count == 1
+    assert Path.exists.call_args == call()
+    assert Path.read_bytes.call_count == 1
+    assert Path.exists.call_args == call()
+    assert Path.write_bytes.call_count == 0
 
 
 def test_render_not_cached(tmp_path, mocker):
@@ -99,16 +114,22 @@ def test_render_not_cached(tmp_path, mocker):
     mocker.patch.object(Path, "write_bytes")
     mocker.patch.object(Path, "exists", return_value=False)
 
-    result = XKCDDisplayService()._render(tmp_path, 12, 3, SpokenText("", ""))
+    result = XKCDDisplayService()._render(tmp_path, 12, 3, SpokenText("speaker", "text"))
 
     assert result == "image"
-    Path.exists.assert_called_once()
-    Path.read_bytes.assert_not_called()
-    Path.write_bytes.assert_called_once()
+    from xkcd_display.renderer import render_xkcd_image
+    assert render_xkcd_image.call_count == 1
+    assert render_xkcd_image.call_args == call("text")
+    assert Path.exists.call_count == 1
+    assert Path.exists.call_args == call()
+    assert Path.read_bytes.call_count == 0
+    assert Path.write_bytes.call_count == 1
+    assert Path.write_bytes.call_args == call("image")
 
 
 def test_run_no_reload(tmp_path, mocker):
     from xkcd_display.display import XKCDDisplayService
+    import signal
 
     dialog_file = tmp_path / "123.txt"
     dialog_file.write_text(EXAMPLE_DIALOG)
@@ -130,16 +151,23 @@ def test_run_no_reload(tmp_path, mocker):
     XKCDDisplayService().run(tmp_path)
 
     assert XKCDDisplayService.got_sigterm.call_count == 3
+    assert XKCDDisplayService.got_sigterm.call_args_list == [call(), call(), call()]
     assert XKCDDisplayService.got_signal.call_count == 2
+    assert XKCDDisplayService.got_signal.call_args_list == [call(signal.SIGHUP, clear=True), call(signal.SIGHUP, clear=True)]
     assert XKCDDisplayService._display_dialog.call_count == 2
+    assert XKCDDisplayService._display_dialog.call_args_list == [call(ANY, dialog_file), call(ANY, dialog_file)]
     assert XKCDDisplayService._show_break_picture.call_count == 2
-    XKCDDisplayService._show_goodbye_picture.assert_called_once()
-    XKCDDisplayService._get_dialog_files.assert_called_once()
-    XKCDDisplayService._clear_cache.assert_not_called()
+    assert XKCDDisplayService._show_break_picture.call_args_list == [call(None, dialog_file), call(dialog_file, dialog_file)]
+    assert XKCDDisplayService._show_goodbye_picture.call_count == 1
+    assert XKCDDisplayService._show_goodbye_picture.call_args == call()
+    assert XKCDDisplayService._get_dialog_files.call_count == 1
+    assert XKCDDisplayService._get_dialog_files.call_args == call(tmp_path)
+    assert XKCDDisplayService._clear_cache.call_count == 0
 
 
 def test_run_with_reload(tmp_path, mocker):
     from xkcd_display.display import XKCDDisplayService
+    import signal
 
     dialog_file = tmp_path / "123.txt"
     dialog_file.write_text(EXAMPLE_DIALOG)
@@ -161,9 +189,15 @@ def test_run_with_reload(tmp_path, mocker):
     XKCDDisplayService().run(tmp_path)
 
     assert XKCDDisplayService.got_sigterm.call_count == 3
+    assert XKCDDisplayService.got_sigterm.call_args_list == [call(), call(), call()]
     assert XKCDDisplayService.got_signal.call_count == 2
+    assert XKCDDisplayService.got_signal.call_args_list == [call(signal.SIGHUP, clear=True), call(signal.SIGHUP, clear=True)]
     assert XKCDDisplayService._display_dialog.call_count == 2
+    assert XKCDDisplayService._display_dialog.call_args_list == [call(ANY, dialog_file), call(ANY, dialog_file)]
     assert XKCDDisplayService._show_break_picture.call_count == 2
+    assert XKCDDisplayService._show_break_picture.call_args_list == [call(None, dialog_file), call(dialog_file, dialog_file)]
+    assert XKCDDisplayService._show_goodbye_picture.call_count == 1
+    assert XKCDDisplayService._show_goodbye_picture.call_args == call()
     assert XKCDDisplayService._get_dialog_files.call_count == 2
-    XKCDDisplayService._show_goodbye_picture.assert_called_once()
-    XKCDDisplayService._clear_cache.assert_called_once()
+    assert XKCDDisplayService._get_dialog_files.call_args_list == [call(tmp_path), call(tmp_path)]
+    assert XKCDDisplayService._clear_cache.call_count == 1

@@ -1,5 +1,6 @@
 import pytest
 from collections import namedtuple
+from unittest.mock import ANY, call
 
 from xkcd_display import Size
 
@@ -24,6 +25,9 @@ def test_eval_text_metrics(mocker):
     assert result.width == 1
     assert result.height == 2
     assert result.character_height == 3
+    assert Drawing.get_font_metrics.call_count == 1
+    assert Drawing.get_font_metrics.call_args == call("image", "Hello!", multiline=True)
+
 
 
 def test_unique_text_wraps():
@@ -107,17 +111,20 @@ def test_find_best_fitting_text_wrap(mocker):
     max_size = Size(width=1, height=1)
     effects = [Size(width=1, height=2) for i in range(0, 7)]
     effects.append(Size(1, 1))
-    mocker.patch(
-        "xkcd_display.renderer.eval_text_metrics", side_effect=effects
-    )
+    mocker.patch("xkcd_display.renderer.eval_text_metrics", side_effect=effects)
 
-    result = find_best_fitting_text_wrap(Drawing(), "image", max_size, text)
+    sketch = Drawing()
+    result = find_best_fitting_text_wrap(sketch, "image", max_size, text)
 
     assert result == [
         "Python! I learned it",
         "last night! Everything",
         "is so simple!",
     ]
+    from xkcd_display.renderer import eval_text_metrics
+    assert eval_text_metrics.call_count == 8
+    assert eval_text_metrics.call_args == ((sketch, "image", "\n".join(result)), {})
+
 
 
 @pytest.mark.parametrize(
@@ -172,14 +179,16 @@ def test_find_best_text_fit(mocker):
     assert result.width == 3
     assert result.height == 3
     assert result.character_height == 3
+    from xkcd_display.renderer import find_best_fitting_text_wrap
+    assert find_best_fitting_text_wrap.call_count == 1
+    assert find_best_fitting_text_wrap.call_args == call(sketch, "image", max_size, "text")
+    from xkcd_display.renderer import eval_text_metrics
+    assert eval_text_metrics.call_count == 3
+    assert eval_text_metrics.call_args == call(sketch, "image", "\n".join(lines))
 
 
 def test_find_best_raises_value_error(mocker):
-    from xkcd_display.renderer import (
-        find_best_text_fit,
-        FontMetrics,
-        TextFitParameter,
-    )
+    from xkcd_display.renderer import find_best_text_fit
 
     mocker.patch("xkcd_display.renderer.find_best_fitting_text_wrap")
     mocker.patch("xkcd_display.renderer.font_sizes", return_value=[])
@@ -216,6 +225,14 @@ def test_render_text(mocker):
     assert result.x == 5
     assert result.y == 9
     assert result.character_height == 4
+    from xkcd_display.renderer import find_best_text_fit
+    assert find_best_text_fit.call_count == 1
+    assert find_best_text_fit.call_args == call(ANY, image, Size(width=18, height=18), "text")
+    from wand.drawing import Drawing
+    assert Drawing.text.call_count == 1
+    assert Drawing.text.call_args == call(5, 9, "\n".join(lines))
+    assert Drawing.draw.call_count == 1
+    assert Drawing.draw.call_args == call(image)
 
 
 def test_create_image_blob(mocker):
@@ -224,13 +241,20 @@ def test_create_image_blob(mocker):
     mocker.patch("xkcd_display.renderer.render_text")
     mocker.patch("wand.image.Image.make_blob", return_value="some blob")
 
-    result = create_image_blob("text", "font", Size(width=1, height=1))
+    result = create_image_blob("text", "font", Size(width=1, height=1), format="tif")
 
     assert result == "some blob"
+    from xkcd_display.renderer import render_text
+    assert render_text.call_count == 1
+    assert render_text.call_args == call(ANY, "text", "font")
+    from wand.image import Image
+    assert Image.make_blob.call_count == 1
+    assert Image.make_blob.call_args == call("tif")
 
 
 def test_render_xkcd_image(mocker):
     from xkcd_display.renderer import render_xkcd_image
+    from pathlib import Path
 
     mocker.patch(
         "xkcd_display.renderer.create_image_blob", return_value="xkcd image"
@@ -239,3 +263,5 @@ def test_render_xkcd_image(mocker):
     result = render_xkcd_image("text")
 
     assert result == "xkcd image"
+    from xkcd_display.renderer import create_image_blob
+    assert create_image_blob.call_count == 1
