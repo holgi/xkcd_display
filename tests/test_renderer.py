@@ -200,12 +200,21 @@ def test_find_best_text_fit(mocker):
 
 
 def test_find_best_raises_value_error(mocker):
-    from xkcd_display.renderer import find_best_text_fit
+    from xkcd_display.renderer import find_best_text_fit, FontMetrics
 
     mocker.patch("xkcd_display.renderer.find_best_fitting_text_wrap")
-    mocker.patch("xkcd_display.renderer.font_sizes", return_value=[])
-    sketch = mock_tuple(font_size=1)
-    max_size = mock_tuple(height=1)
+    mock_result = FontMetrics(width=2, height=2, character_height=1)
+    mocker.patch(
+        "xkcd_display.renderer.eval_text_metrics", return_value=mock_result
+    )
+
+    class MockSketch:
+        def __init__(self):
+            self.font_size = 1
+
+    sketch = MockSketch()
+
+    max_size = Size(height=2, width=1)
 
     with pytest.raises(ValueError):
         find_best_text_fit(sketch, "image", max_size, "text")
