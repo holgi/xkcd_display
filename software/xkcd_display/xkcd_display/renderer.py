@@ -193,7 +193,14 @@ def render_text(
 
 
 def create_image_blob(
-    text, font, image_size, *, background_color="white", format="png", **kwargs
+    text,
+    font,
+    image_size,
+    *,
+    background_color="white",
+    format="png",
+    img_type=None,
+    **kwargs
 ):
     """ renders a text as an image and returns its binary representation
 
@@ -205,6 +212,8 @@ def create_image_blob(
         defaults to "white"
     :param str format:
         binary representation format of the image, default to "png"
+    :param str format:
+        wand image type, e.g. "bilevel" or "grayscale"
 
     all other keyword parameters are forwarded to the render_text() function
     """
@@ -216,6 +225,8 @@ def create_image_blob(
         background=background_color,
     ) as img:
         render_text(img, text, font, **kwargs)
+        if img_type is not None:
+            img.type = img_type
         return img.make_blob(format)
 
 
@@ -225,15 +236,17 @@ def render_xkcd_image(text):
     parameters are fitting the xkcd display
 
     :param str text: the text to render
+    :returns: binary encoded image
     """
     return create_image_blob(
         text,
         XKCD_FONT_FILE,
         Size(width=400, height=300),
         background_color="white",
-        format="png",
-        antialias=True,
+        format="gif",
+        antialias=False,
         padding=5,
         color="black",
         font_size_hint=12,
+        img_type="bilevel",
     )

@@ -294,3 +294,15 @@ def test_render_xkcd_image(mocker):
     from xkcd_display.renderer import create_image_blob
 
     assert create_image_blob.call_count == 1
+    assert create_image_blob.call_args == call(
+        "text",
+        ANY,
+        Size(width=400, height=300),
+        background_color="white",
+        format="gif",
+        antialias=False,
+        padding=5,
+        color="black",
+        font_size_hint=12,
+        img_type="bilevel",
+    )

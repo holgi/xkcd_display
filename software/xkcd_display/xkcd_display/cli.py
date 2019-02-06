@@ -136,7 +136,7 @@ def xkcdtest(show, outdir, dialogfile):
             panel = i + 1
             image_file = (
                 output_dir
-                / f"{dialog_path.stem}-{panel:>02}-{spoken_text.speaker}.png"
+                / f"{dialog_path.stem}-{panel:>02}-{spoken_text.speaker}.gif"
             )
             image_file.write_bytes(blob)
             if show:
