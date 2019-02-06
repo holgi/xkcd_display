@@ -217,8 +217,8 @@ Start a new one with `ssh jane@10.0.0.100`. If this works, everything is fine.
 I hade a typo in the path to zsh when issuing the "chsh" command, logged out
 and was not able to ssh into my Raspberry any more, because it didn't find the
 login shell. Stupid me. And yes, I know I could have typed something like
-``sudo chsh -s `which zsh` jane`` but somehow I never remember this by heart.
-*sigh*
+``sudo chsh -s `which zsh` jane`` in the first place but somehow I never
+remember this by heart. *sigh*
 
 
 [rpi1b]: https://www.raspberrypi.org/products/raspberry-pi-1-model-b-plus/

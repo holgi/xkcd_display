@@ -2,7 +2,7 @@ XKCD Display
 ============
 
 At the [35c3][] I've seen a very intriguing (and hopefully easy to build)
-display by [Freies Labor Hildesheim][freieslabor]. It showd Randall Munroes
+display by [Freies Labor Hildesheim][freieslabor]. It showed Randall Munroes
 famous [xkcd][] comics, and now I want to build one myself.
 
 The repo will one day hopefully contain a build instructions and the required
