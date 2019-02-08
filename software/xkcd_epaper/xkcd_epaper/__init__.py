@@ -18,6 +18,7 @@ EPD_WIDTH = 400
 EPD_HEIGHT = 300
 EPD_BUFFER_SIZE = EPD_WIDTH * EPD_HEIGHT // 8
 EPD_WHITE_IMAGE = [0xFF for i in range(0, EPD_BUFFER_SIZE)]
+EPD_BLACK_IMAGE = [0x00 for i in range(0, EPD_BUFFER_SIZE)]
 
 # EPD4IN2B commands
 PANEL_SETTING = 0x00
@@ -90,12 +91,14 @@ class EPD:
     def send_data_list(self, data):
         """ send lot of data to the display """
         GPIO.output(DC_PIN, GPIO.HIGH)
-        SPI.writebytes2(data)
+        for buffer in grouper(data, 2048):
+            SPI.writebytes([b for b in buffer if b is not None])
 
     def init(self):
         """ initialize the display """
 
         # setup gpio and spi
+        print("setup gpio and spi")
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(RST_PIN, GPIO.OUT)
@@ -107,6 +110,7 @@ class EPD:
 
         self.reset()
 
+        print("setup commands")
         self.send_command(BOOSTER_SOFT_START)
         self.send_data_byte(0x17)
         self.send_data_byte(0x17)
@@ -116,19 +120,25 @@ class EPD:
         self.send_command(PANEL_SETTING)
         self.send_data_byte(0x0F)  # LUT from OTP
 
+        print("clear: send 1")
+        self._send_white_image(DATA_START_TRANSMISSION_1)
+
+
     def reset(self):
         """ hardware reset
 
         setting the reset pin from high to low resets the module
         """
+        print("reset")
         for value in (GPIO.HIGH, GPIO.LOW, GPIO.HIGH):
             GPIO.output(RST_PIN, value)
             delay_ms(200)
 
-    def clear(self, color):
+    def clear(self):
         """ clear the display with a white image """
-        self._send_white_image(DATA_START_TRANSMISSION_1)
+        print("clear: send 2")
         self._send_white_image(DATA_START_TRANSMISSION_2)
+        print("clear: refresh")
         self.send_command(DISPLAY_REFRESH)
         self.wait_until_idle()
 
@@ -137,10 +147,11 @@ class EPD:
 
         the pixel values should amount to a length of 400 x 300 items
         """
-        self._send_white_image(DATA_START_TRANSMISSION_1)
+        print("display: send 2")
         self.send_command(DATA_START_TRANSMISSION_2)
-        buffer = list(self._buffer_from_pixels(pixels))
+        buffer = self._buffer_from_pixels(pixels)
         self.send_data_list(buffer)
+        print("display: refresh")
         self.send_command(DISPLAY_REFRESH)
         self.wait_until_idle()
 
@@ -167,5 +178,7 @@ class EPD:
 
     def _send_white_image(self, transmission):
         """ sends all white pixels using a transmission channel """
+        print("sending white")
         self.send_command(transmission)
         self.send_data_list(EPD_WHITE_IMAGE)
+
