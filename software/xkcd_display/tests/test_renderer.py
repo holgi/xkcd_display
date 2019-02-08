@@ -260,49 +260,58 @@ def test_render_text(mocker):
     assert Drawing.draw.call_args == call(image)
 
 
-def test_create_image_blob(mocker):
-    from xkcd_display.renderer import create_image_blob
+def test_render_xkcd_image_as_gif(mocker):
+    from xkcd_display.renderer import render_xkcd_image_as_gif, XKCD_FONT_FILE
 
     mocker.patch("xkcd_display.renderer.render_text")
     mocker.patch("wand.image.Image.make_blob", return_value="some blob")
 
-    result = create_image_blob(
-        "text", "font", Size(width=1, height=1), format="tif"
-    )
+    result = render_xkcd_image_as_gif("text")
 
     assert result == "some blob"
     from xkcd_display.renderer import render_text
 
     assert render_text.call_count == 1
-    assert render_text.call_args == call(ANY, "text", "font")
+    assert render_text.call_args == call(
+        ANY,
+        "text",
+        XKCD_FONT_FILE,
+        antialias=False,
+        color="black",
+        font_size_hint=12,
+        padding=5,
+    )
     from wand.image import Image
 
     assert Image.make_blob.call_count == 1
-    assert Image.make_blob.call_args == call("tif")
+    assert Image.make_blob.call_args == call("gif")
 
 
-def test_render_xkcd_image(mocker):
-    from xkcd_display.renderer import render_xkcd_image
-
-    mocker.patch(
-        "xkcd_display.renderer.create_image_blob", return_value="xkcd image"
+def test_render_render_xkcd_image_as_pixels(mocker):
+    from xkcd_display.renderer import (
+        render_xkcd_image_as_pixels,
+        XKCD_FONT_FILE,
     )
 
-    result = render_xkcd_image("text")
+    mocker.patch("xkcd_display.renderer.render_text")
+    mocker.patch("wand.image.Image.export_pixels", return_value="some list")
 
-    assert result == "xkcd image"
-    from xkcd_display.renderer import create_image_blob
+    result = render_xkcd_image_as_pixels("text")
 
-    assert create_image_blob.call_count == 1
-    assert create_image_blob.call_args == call(
-        "text",
+    assert "".join(result) == "some list"
+    from xkcd_display.renderer import render_text
+
+    assert render_text.call_count == 1
+    assert render_text.call_args == call(
         ANY,
-        Size(width=400, height=300),
-        background_color="white",
-        format="gif",
+        "text",
+        XKCD_FONT_FILE,
         antialias=False,
-        padding=5,
         color="black",
         font_size_hint=12,
-        img_type="bilevel",
+        padding=5,
     )
+    from wand.image import Image
+
+    assert Image.export_pixels.call_count == 1
+    assert Image.export_pixels.call_args == call(channel_map="I")

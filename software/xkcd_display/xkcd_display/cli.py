@@ -132,7 +132,7 @@ def xkcdtest(show, outdir, dialogfile):
     with context_manager as output_dir_name:
         output_dir = Path(output_dir_name)
         for i, spoken_text in enumerate(transcript):
-            blob = renderer.render_xkcd_image(spoken_text.text)
+            blob = renderer.render_xkcd_image_as_gif(spoken_text.text)
             panel = i + 1
             image_file = (
                 output_dir

@@ -13,6 +13,7 @@ setproctitle = "^1.1"
 python-daemon = "^2.2"
 pid = "^2.2"
 
+toml = "^0.10.0"
 # not included is "service", still waiting for pull requests
 
 [tool.poetry.dev-dependencies]

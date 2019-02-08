@@ -95,7 +95,7 @@ def test_render_cached(tmp_path, mocker):
     from xkcd_display.dialog import SpokenText
 
     mocker.patch(
-        "xkcd_display.renderer.render_xkcd_image", return_value="image"
+        "xkcd_display.renderer.render_xkcd_image_as_gif", return_value="image"
     )
     mocker.patch.object(Path, "read_bytes", return_value="cache")
     mocker.patch.object(Path, "write_bytes")
@@ -104,9 +104,9 @@ def test_render_cached(tmp_path, mocker):
     result = XKCDDisplayService()._render(tmp_path, 12, 3, SpokenText("", ""))
 
     assert result == "cache"
-    from xkcd_display.renderer import render_xkcd_image
+    from xkcd_display.renderer import render_xkcd_image_as_gif
 
-    assert render_xkcd_image.call_count == 0
+    assert render_xkcd_image_as_gif.call_count == 0
     assert Path.exists.call_count == 1
     assert Path.exists.call_args == call()
     assert Path.read_bytes.call_count == 1
@@ -119,7 +119,7 @@ def test_render_not_cached(tmp_path, mocker):
     from xkcd_display.dialog import SpokenText
 
     mocker.patch(
-        "xkcd_display.renderer.render_xkcd_image", return_value="image"
+        "xkcd_display.renderer.render_xkcd_image_as_gif", return_value="image"
     )
     mocker.patch.object(Path, "read_bytes", return_value="cache")
     mocker.patch.object(Path, "write_bytes")
@@ -130,10 +130,10 @@ def test_render_not_cached(tmp_path, mocker):
     )
 
     assert result == "image"
-    from xkcd_display.renderer import render_xkcd_image
+    from xkcd_display.renderer import render_xkcd_image_as_gif
 
-    assert render_xkcd_image.call_count == 1
-    assert render_xkcd_image.call_args == call("text")
+    assert render_xkcd_image_as_gif.call_count == 1
+    assert render_xkcd_image_as_gif.call_args == call("text")
     assert Path.exists.call_count == 1
     assert Path.exists.call_args == call()
     assert Path.read_bytes.call_count == 0

@@ -208,6 +208,14 @@ version = "1.12.0"
 
 [[package]]
 category = "main"
+description = "Python Library for Tom's Obvious, Minimal Language"
+name = "toml"
+optional = false
+python-versions = "*"
+version = "0.10.0"
+
+[[package]]
+category = "main"
 description = "Ctypes-based simple MagickWand API binding for Python"
 name = "wand"
 optional = false
@@ -215,7 +223,7 @@ python-versions = "*"
 version = "0.5.0"
 
 [metadata]
-content-hash = "051d63cbd92dc631c95f799fc48c966688a9abdb1c656ea12c16464927d16f8e"
+content-hash = "b636be95916751c0977b6e43b57f9f7a2978ccd65254e0663a715af94e34451c"
 python-versions = "^3.7"
 
 [metadata.hashes]
@@ -241,4 +249,5 @@ pytest-mock = ["4d0d06d173eecf172703219a71dbd4ade0e13904e6bbce1ce660e2e0dc78b5c4
 python-daemon = ["1d9a541f74822ac87045163ebd5473f9a7b22ab4031ed28293aba81fdaf6c156", "affeca9e5adfce2666a63890af9d6aff79f670f7511899edaddca7f96593cc25"]
 setproctitle = ["6283b7a58477dd8478fbb9e76defb37968ee4ba47b05ec1c053cb39638bd7398", "6a035eddac62898786aed2c2eee7334c28cfc8106e8eb29fdd117cac56c6cdf0"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
+toml = ["229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c", "235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", "f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"]
 wand = ["3e59e4bda9ef9d643d90e881cc950c8eee1508ec2cde1c150a1cbd5a12c1c007", "52763dbf65d00cf98d7bc910b49329eea15896249c5555d47e169f2b6efbe166"]

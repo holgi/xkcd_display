@@ -124,7 +124,7 @@ class XKCDDisplayService(Service):
             return cache_file.read_bytes()
         else:
             self.logger.info("rendering image {xkcd_id} {img_nr}")
-            blob = renderer.render_xkcd_image(spoken_text.text)
+            blob = renderer.render_xkcd_image_as_gif(spoken_text.text)
             cache_file.write_bytes(blob)
             return blob
 

@@ -12,6 +12,17 @@ from . import Size
 
 # set the path to the xkcd font file
 XKCD_FONT_FILE = str(Path(__file__).parent / "xkcd-script.ttf")
+XKCD_IMAGE_PROPERTIES = {
+    "width": 400,
+    "height": 300,
+    "background": Color("white"),
+}
+XKCD_RENDER_PROPERTIES = {
+    "antialias": False,
+    "padding": 5,
+    "color": "black",
+    "font_size_hint": 12,
+}
 
 
 FontMetrics = namedtuple(
@@ -192,45 +203,7 @@ def render_text(
         )
 
 
-def create_image_blob(
-    text,
-    font,
-    image_size,
-    *,
-    background_color="white",
-    format="png",
-    img_type=None,
-    **kwargs
-):
-    """ renders a text as an image and returns its binary representation
-
-    :param str text: the text to render
-    :param str font: path to a font file
-    :param Size image_size: image size
-    :param str background_color:
-        background color for the image, use None for a transparent background,
-        defaults to "white"
-    :param str format:
-        binary representation format of the image, default to "png"
-    :param str format:
-        wand image type, e.g. "bilevel" or "grayscale"
-
-    all other keyword parameters are forwarded to the render_text() function
-    """
-    if background_color is not None:
-        background_color = Color(background_color)
-    with Image(
-        width=image_size.width,
-        height=image_size.height,
-        background=background_color,
-    ) as img:
-        render_text(img, text, font, **kwargs)
-        if img_type is not None:
-            img.type = img_type
-        return img.make_blob(format)
-
-
-def render_xkcd_image(text):
+def render_xkcd_image_as_gif(text):
     """ returns a image blob with text rendered as large as possible
 
     parameters are fitting the xkcd display
@@ -238,15 +211,13 @@ def render_xkcd_image(text):
     :param str text: the text to render
     :returns: binary encoded image
     """
-    return create_image_blob(
-        text,
-        XKCD_FONT_FILE,
-        Size(width=400, height=300),
-        background_color="white",
-        format="gif",
-        antialias=False,
-        padding=5,
-        color="black",
-        font_size_hint=12,
-        img_type="bilevel",
-    )
+    with Image(**XKCD_IMAGE_PROPERTIES) as img:
+        render_text(img, text, XKCD_FONT_FILE, **XKCD_RENDER_PROPERTIES)
+        img.type = "bilevel"
+        return img.make_blob("gif")
+
+
+def render_xkcd_image_as_pixels(text):
+    with Image(**XKCD_IMAGE_PROPERTIES) as img:
+        render_text(img, text, XKCD_FONT_FILE, **XKCD_RENDER_PROPERTIES)
+        return iter(img.export_pixels(channel_map="I"))

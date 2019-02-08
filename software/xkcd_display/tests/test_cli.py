@@ -156,7 +156,7 @@ def test_xkcdtest_show_no_outdir(cli_args, showed, slept, mocker):
 
     mocker.patch.object(Path, "write_bytes")
     mocker.patch.object(
-        xkcd_display.renderer, "render_xkcd_image", return_value=b"1"
+        xkcd_display.renderer, "render_xkcd_image_as_gif", return_value=b"1"
     )
     mocker.patch.object(click, "launch")
     mocker.patch("time.sleep")
@@ -171,8 +171,8 @@ def test_xkcdtest_show_no_outdir(cli_args, showed, slept, mocker):
         assert result.exit_code == 0
 
     assert Path.write_bytes.call_count == 2
-    assert xkcd_display.renderer.render_xkcd_image.call_count == 2
-    assert xkcd_display.renderer.render_xkcd_image.call_args_list == [
+    assert xkcd_display.renderer.render_xkcd_image_as_gif.call_count == 2
+    assert xkcd_display.renderer.render_xkcd_image_as_gif.call_args_list == [
         call("yeah"),
         call("sigh"),
     ]
