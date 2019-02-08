@@ -14,7 +14,7 @@ BUSY_PIN = 24
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)
 try:
-    result = subprocess.check_output(["cat", "/sys/module/spidev/parameters/bufsize"])
+    result = subprocess.check_output(["cat", "/sys/module/spidev/parameters/bufsiz"])
     SPI_BUFFER_SIZE = int(result.strip())
 except subprocess.CalledProcessError:
     # small, but should do the trick
