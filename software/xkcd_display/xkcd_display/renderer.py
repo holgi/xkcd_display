@@ -218,7 +218,7 @@ def render_xkcd_image_as_gif(text):
 
 
 def render_xkcd_image_as_pixels(text):
-    """ returns an iterator of pixel intensities of a rendered xkcd image
+    """ renders an xkcd image and returns an iterator of pixel intensities
 
     parameters are fitting the xkcd display
 

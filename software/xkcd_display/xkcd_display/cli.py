@@ -112,7 +112,7 @@ def xkcdtest(show, outdir, dialogfile):
     to show it. Sometimes adjustments to the dialog have to be made...
 
     If now output directory is set, the images are rendered to a temporary
-    directory and are shown even if --quite is selected.
+    directory and are shown even if --show is not selected.
 
     :param click.Context context: command line context
     :param bool show: show the image in the default image viewer

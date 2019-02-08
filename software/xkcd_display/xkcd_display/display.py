@@ -39,19 +39,16 @@ class XKCDDisplayService(Service):
             directory that holds the dialog textfiles
         """
         dialogs_directory = Path(dialogs_directory)
-        with tempfile.TemporaryDirectory() as cache_dir:
-            chache_path = Path(cache_dir)
-            dialog_files = self._get_dialog_files(dialogs_directory)
-            old_selected = None
-            while not self.got_sigterm():
-                if self.got_signal(signal.SIGHUP, clear=True):
-                    dialog_files = self._get_dialog_files(dialogs_directory)
-                    self._clear_cache(chache_path)
-                new_selected = random.choice(dialog_files)
-                self._show_break_picture(old_selected, new_selected)
-                self._display_dialog(chache_path, new_selected)
-                old_selected = new_selected
-            self._show_goodbye_picture()
+        dialog_files = self._get_dialog_files(dialogs_directory)
+        old_selected = None
+        while not self.got_sigterm():
+            if self.got_signal(signal.SIGHUP, clear=True):
+                dialog_files = self._get_dialog_files(dialogs_directory)
+            new_selected = random.choice(dialog_files)
+            self._show_break_picture(old_selected, new_selected)
+            self._display_dialog(new_selected)
+            old_selected = new_selected
+        self._show_goodbye_picture()
 
     def _get_dialog_files(self, dialogs_directory):
         """ gets all available dialog text files
@@ -66,16 +63,7 @@ class XKCDDisplayService(Service):
         texts = (f for f in visible if f.suffix == ".txt")
         return list(texts)
 
-    def _clear_cache(self, cache_dir):
-        """ clears the cache directory
-
-        :param pathlib.Path cache_dir: path of the cache directory
-        """
-        self.logger.info("clearing cache directory")
-        for item in cache_dir.iterdir():
-            item.unlink()
-
-    def _display_dialog(self, cache_dir, dialog_file):
+    def _display_dialog(self, dialog_file):
         """ displays a dialog
 
         A dialog consits of multiple lines with a speaker and the related text.
@@ -88,13 +76,13 @@ class XKCDDisplayService(Service):
         self.logger.info("displaying dialog {xkcd_id}")
         raw_transcript = dialog.parse_dialog(dialog_file.read_text())
         transcript = dialog.adjust_narrators(raw_transcript)
-        for img_nr, spoken_text in enumerate(transcript):
-            self._display_image(cache_dir, xkcd_id, img_nr, spoken_text)
+        for spoken_text in transcript:
+            self._display_image(spoken_text)
             # wait time is guessed for now...
             wait = 5 + spoken_text.text.count(" ") * 0.5
             time.sleep(wait)
 
-    def _display_image(self, cache_dir, xkcd_id, img_nr, spoken_text):
+    def _display_image(self, spoken_text):
         """ displays an image on the xkcd display
 
         :param pathlib.Path cache_dir: path of the cache directory
@@ -102,31 +90,10 @@ class XKCDDisplayService(Service):
         :param int img_nr: image number
         :param str spoken_text: text to display
         """
-        self.logger.info("displaying image {xkcd_id} {img_nr}")
-        img = self._render(cache_dir, xkcd_id, img_nr, spoken_text)
+        self.logger.info("displaying image")
+        pixel_iterator = renderer.render_xkcd_image_as_pixels(spoken_text.text)
         # TODO: show image on ePaper display
         # TODO: move pointer to the speaker
-
-    def _render(self, cache_dir, xkcd_id, img_nr, spoken_text):
-        """ returns text rendered as an image
-
-        If the image was already cached, it uses the cached version
-
-        :param pathlib.Path cache_dir: path of the cache directory
-        :param str xkcd_id: unique identifier of the dialog
-        :param int img_nr: image number
-        :param str spoken_text: text to display
-        :returns bytes: rendered image
-        """
-        cache_file = cache_dir / f"{xkcd_id}-{img_nr}.png"
-        if cache_file.exists():
-            self.logger.info("using cached image {xkcd_id} {img_nr}")
-            return cache_file.read_bytes()
-        else:
-            self.logger.info("rendering image {xkcd_id} {img_nr}")
-            blob = renderer.render_xkcd_image_as_gif(spoken_text.text)
-            cache_file.write_bytes(blob)
-            return blob
 
     def _show_break_picture(self, old_selected, new_selected):
         """ displays a picture in between two dialogs
