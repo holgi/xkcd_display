@@ -1,6 +1,7 @@
 import spidev
 import RPi.GPIO as GPIO
 import time
+import subprocess
 
 from itertools import zip_longest
 
@@ -12,6 +13,12 @@ BUSY_PIN = 24
 
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)
+try:
+    result = subprocess.check_output(["cat", "/sys/module/spidev/parameters/bufsize"])
+    SPI_BUFFER_SIZE = int(result.strip())
+except subprocess.CalledProcessError:
+    # small, but should do the trick
+    SPI_BUFFER_SIZE = 512
 
 # Display resolution
 EPD_WIDTH = 400
@@ -89,9 +96,14 @@ class EPD:
         SPI.writebytes([data])
 
     def send_data_list(self, data):
-        """ send lot of data to the display """
+        """ send lot of data to the display
+
+        the installed version of spidev doesn't have the writebytes2 function;
+        this is a pure python implementation. The buffer size is only half of
+        the size reported
+        """
         GPIO.output(DC_PIN, GPIO.HIGH)
-        for buffer in grouper(data, 2048):
+        for buffer in grouper(data, SPI_BUFFER_SIZE):
             SPI.writebytes([b for b in buffer if b is not None])
 
     def init(self):
