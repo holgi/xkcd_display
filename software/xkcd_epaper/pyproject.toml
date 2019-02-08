@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "xkcd_epaper"
+version = "0.0.1"
+description = "interface for the waveshare 4.2\" epaper display"
+authors = ["Holger Frey <mail@holgerfrey.de>"]
+license = "Beerware"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+"RPi.GPIO" = "^0.6.5"
+spidev = "^3.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.0"
+pytest-cov = "^2.6"
+flake8 = "^3.7"
+pytest-mock = "^1.10"
+
+# black = "^18"  # poetry just won't install black, installed it with pip
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

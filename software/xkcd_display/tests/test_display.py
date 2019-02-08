@@ -45,14 +45,9 @@ def test_display_dialog(tmp_path, mocker):
 
     assert XKCDDisplayService._display_image.call_count == 3
     assert XKCDDisplayService._display_image.call_args_list == [
-        call(
-            SpokenText(speaker="cueball", text="You're flying! How?"),
-        ),
-        call(SpokenText(speaker="megan", text="Python!")
-        ),
-        call(
-            SpokenText(speaker="megan", text="I learned it last night!"),
-        ),
+        call(SpokenText(speaker="cueball", text="You're flying! How?")),
+        call(SpokenText(speaker="megan", text="Python!")),
+        call(SpokenText(speaker="megan", text="I learned it last night!")),
     ]
     assert time.sleep.call_count == 3
     assert time.sleep.call_args_list == [call(6), call(5), call(7)]
@@ -65,14 +60,12 @@ def test_display_image(mocker):
     mocker.patch("xkcd_display.renderer.render_xkcd_image_as_pixels")
 
     XKCDDisplayService()._display_image(
-    SpokenText(speaker="megan", text="*sigh*")
+        SpokenText(speaker="megan", text="*sigh*")
     )
     from xkcd_display.renderer import render_xkcd_image_as_pixels
 
     assert render_xkcd_image_as_pixels.call_count == 1
-    assert render_xkcd_image_as_pixels.call_args == call(
-        "*sigh*"
-    )
+    assert render_xkcd_image_as_pixels.call_args == call("*sigh*")
 
 
 def test_run_no_reload(tmp_path, mocker):
