@@ -218,6 +218,13 @@ def render_xkcd_image_as_gif(text):
 
 
 def render_xkcd_image_as_pixels(text):
+    """ returns an iterator of pixel intensities of a rendered xkcd image
+
+    parameters are fitting the xkcd display
+
+    :param str text: the text to render
+    :returns: iterator of pixel intensities
+    """
     with Image(**XKCD_IMAGE_PROPERTIES) as img:
         render_text(img, text, XKCD_FONT_FILE, **XKCD_RENDER_PROPERTIES)
         return iter(img.export_pixels(channel_map="I"))
