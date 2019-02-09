@@ -27,14 +27,14 @@ class EPD:
 
         self.reset()
 
-        self.send_command(BOOSTER_SOFT_START)
-        self.send_data_byte(0x17)
-        self.send_data_byte(0x17)
-        self.send_data_byte(0x17)  # 07 0f 17 1f 27 2F 37 2f
-        self.send_command(POWER_ON)
+        send_command(BOOSTER_SOFT_START)
+        send_data_byte(0x17)
+        send_data_byte(0x17)
+        send_data_byte(0x17)  # 07 0f 17 1f 27 2F 37 2f
+        send_command(POWER_ON)
         self.wait_until_idle()
-        self.send_command(PANEL_SETTING)
-        self.send_data_byte(0x3F)  # 300x400 B/W mode, LUT set by register
+        send_command(PANEL_SETTING)
+        send_data_byte(0x3F)  # 300x400 B/W mode, LUT set by register
 
         self.refresh = Refresh()
 
@@ -54,7 +54,7 @@ class EPD:
         """ clear the display with a white image """
         self.refresh.slow()
         self._send_white_image(DATA_START_TRANSMISSION_2)
-        self.send_command(DISPLAY_REFRESH)
+        send_command(DISPLAY_REFRESH)
         self.wait_until_idle()
 
     def display(self, pixels):
@@ -66,11 +66,11 @@ class EPD:
         buffer = list(self._buffer_from_pixels(pixels))
         print("creating buffer:", t-time.time())
         t = time.time()
-        self.send_command(DATA_START_TRANSMISSION_2)
-        self.send_data_list(buffer)
+        send_command(DATA_START_TRANSMISSION_2)
+        send_data_list(buffer)
         print("senging buffer:", t-time.time())
         t = time.time()
-        self.send_command(DISPLAY_REFRESH)
+        send_command(DISPLAY_REFRESH)
         print("refresh:", t-time.time())
         t = time.time()
         self.wait_until_idle()
@@ -79,10 +79,10 @@ class EPD:
 
     def sleep(self):
         """ send the display into sleep """
-        self.send_command(POWER_OFF)
+        send_command(POWER_OFF)
         self.wait_until_idle()
-        self.send_command(DEEP_SLEEP)
-        self.send_data_byte(0xA5)
+        send_command(DEEP_SLEEP)
+        send_data_byte(0xA5)
 
     def wait_until_idle(self):
         """ wait for the display """
@@ -100,5 +100,5 @@ class EPD:
 
     def _send_white_image(self, transmission):
         """ sends all white pixels using a transmission channel """
-        self.send_command(transmission)
-        self.send_data_list(EPD_WHITE_IMAGE)
+        send_command(transmission)
+        send_data_list(EPD_WHITE_IMAGE)
