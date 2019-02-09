@@ -1,4 +1,4 @@
-from collections import Enum
+from enum import Enum
 
 from .config import *
 
