@@ -3,8 +3,6 @@ import RPi.GPIO as GPIO
 import time
 import subprocess
 
-from itertools import zip_longest
-
 from .config import *
 from .lut import Refresh
 
@@ -34,6 +32,7 @@ class EPD:
         send_command(POWER_ON)
         self.wait_until_idle()
         send_command(PANEL_SETTING)
+        #send_data_byte(0x0F)  # 300x400 B/W mode, LUT set by OTP
         send_data_byte(0x3F)  # 300x400 B/W mode, LUT set by register
 
         self.refresh = Refresh()
@@ -53,6 +52,7 @@ class EPD:
     def clear(self):
         """ clear the display with a white image """
         self.refresh.slow()
+        self._send_white_image(DATA_START_TRANSMISSION_1)
         self._send_white_image(DATA_START_TRANSMISSION_2)
         send_command(DISPLAY_REFRESH)
         self.wait_until_idle()
@@ -62,19 +62,14 @@ class EPD:
 
         the pixel values should amount to a length of 400 x 300 items
         """
-        t = time.time()
+        send_command(DATA_START_TRANSMISSION_1)
+        send_data_list(self._old_buffer)
         buffer = list(self._buffer_from_pixels(pixels))
-        print("creating buffer:", t-time.time())
-        t = time.time()
         send_command(DATA_START_TRANSMISSION_2)
         send_data_list(buffer)
-        print("senging buffer:", t-time.time())
-        t = time.time()
         send_command(DISPLAY_REFRESH)
-        print("refresh:", t-time.time())
-        t = time.time()
+        self._old_buffer = buffer
         self.wait_until_idle()
-        print("wait idle:", t-time.time())
 
 
     def sleep(self):
