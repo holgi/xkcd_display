@@ -1,3 +1,8 @@
+import spidev
+import RPi.GPIO as GPIO
+import time
+import subprocess
+
 # Pin definition
 RST_PIN = 17
 DC_PIN = 25
