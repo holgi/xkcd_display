@@ -3,6 +3,8 @@ import RPi.GPIO as GPIO
 import time
 import subprocess
 
+from itertools import zip_longest
+
 # Pin definition
 RST_PIN = 17
 DC_PIN = 25
