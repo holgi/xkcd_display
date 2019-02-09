@@ -134,6 +134,7 @@ LUT_QUICK = (
 class Refresh:
 
     def __init__(self):
+        self.state = None
         self.set(quick=False)
 
 
