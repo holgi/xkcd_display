@@ -1,9 +1,26 @@
-import spidev
 import RPi.GPIO as GPIO
-import time
-import subprocess
 
-from .config import *
+from .config import (
+    RST_PIN,
+    DC_PIN,
+    CS_PIN,
+    BUSY_PIN,
+    SPI,
+    BOOSTER_SOFT_START,
+    POWER_ON,
+    PANEL_SETTING,
+    DATA_START_TRANSMISSION_1,
+    DATA_START_TRANSMISSION_2,
+    DISPLAY_REFRESH,
+    EPD_WHITE_IMAGE,
+    POWER_OFF,
+    DEEP_SLEEP,
+    delay_ms,
+    grouper,
+    send_command,
+    send_data_byte,
+    send_data_list,
+)
 from .lut import Refresh
 
 
@@ -32,7 +49,6 @@ class EPD:
         send_command(POWER_ON)
         self.wait_until_idle()
         send_command(PANEL_SETTING)
-        #send_data_byte(0x0F)  # 300x400 B/W mode, LUT set by OTP
         send_data_byte(0x3F)  # 300x400 B/W mode, LUT set by register
 
         self.refresh = Refresh()
@@ -70,7 +86,6 @@ class EPD:
         send_command(DISPLAY_REFRESH)
         self._old_buffer = buffer
         self.wait_until_idle()
-
 
     def sleep(self):
         """ send the display into sleep """

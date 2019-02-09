@@ -14,9 +14,11 @@ BUSY_PIN = 24
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)
 try:
-    result = subprocess.check_output(["cat", "/sys/module/spidev/parameters/bufsiz"])
+    result = subprocess.check_output(
+        ["cat", "/sys/module/spidev/parameters/bufsiz"]
+    )
     SPI_BUFFER_SIZE = int(result.strip())
-except subprocess.CalledProcessError:
+except Exception:
     # small, but should do the trick
     SPI_BUFFER_SIZE = 512
 
@@ -81,15 +83,18 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
+
 def send_command(command):
     """ send a command to the display """
     GPIO.output(DC_PIN, GPIO.LOW)
     SPI.writebytes([command])
 
+
 def send_data_byte(data):
     """ sends one byte of data to the display """
     GPIO.output(DC_PIN, GPIO.HIGH)
     SPI.writebytes([data])
+
 
 def send_data_list(data):
     """ send lot of data to the display
