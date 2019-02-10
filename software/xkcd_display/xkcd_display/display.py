@@ -28,11 +28,6 @@ class XKCDDisplayService(Service):
             )
         )
         self.logger.setLevel(logging.INFO)
-        self._pointer_pos = {
-            "cueball": 5,
-            "megan": 9,
-            "center": 7
-            }
 
     @property
     def epd(self):
@@ -124,10 +119,7 @@ class XKCDDisplayService(Service):
             self.epd.refresh.slow()
         else:
             self.epd.refresh.quick()
-        self._move_pointer(spoken_text.speaker)
-        self.epd.display(pixel_iterator)
-        # TODO: show image on ePaper display
-        # TODO: move pointer to the speaker
+        self._move_and_display(spoken_text.speaker, pixel_iterator)
 
     def _show_break_picture(self, old_selected, new_selected):
         """ displays a picture in between two dialogs
@@ -141,13 +133,9 @@ class XKCDDisplayService(Service):
         else:
             text = f"Starting with {new_selected.stem}"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
-        self._move_pointer("center")
         self.epd.refresh.slow()
-        self.epd.display(pixel_iterator)
+        self._move_and_display("center", pixel_iterator)
         time.sleep(5)  # a random guess
-        # TODO: implement something nice
-        # TODO: show image on ePaper display
-        # TODO: move pointer between speakers
 
     def _show_goodbye_picture(self):
         """ displays a goodbye message
@@ -155,18 +143,16 @@ class XKCDDisplayService(Service):
         Since an e-ink display is used in the xkcd-display this shows a
         nice goodbye message or just cleans the screen
         """
-        # TODO: implement something nice
-        # TODO: show image on ePaper display
-        # TODO: move pointer between speakers
         self.logger.info("rendering goodbye picture")
         text = "Be excellent to each other"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
-        self._move_pointer("center")
         self.epd.refresh.slow()
-        self.epd.display(pixel_iterator)
+        self._move_and_display("center", pixel_iterator)
         self.epd.sleep()
 
-    def _move_pointer(self, where):
+    def _move_and_display(self, where, pixel_iterator):
         """ moves the pointer (servo) to a speaker """
         pos = self._pointer_pos.get(where.lower(), self._pointer_pos["center"])
         self.epd.move(pos)
+        self.epd.display(pixel_iterator)
+        self.epd.move(0)
