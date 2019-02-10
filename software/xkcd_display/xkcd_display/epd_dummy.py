@@ -64,3 +64,7 @@ class EPDummy:
     def wait_until_idle(self):
         """ wait for the display """
         pass
+
+    def _send_white_image(self, transmission):
+        """ send a white image to a display buffer """
+        pass

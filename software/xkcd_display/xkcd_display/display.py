@@ -87,13 +87,13 @@ class XKCDDisplayService(Service):
         self.logger.info(f"displaying dialog {xkcd_id}")
         raw_transcript = dialog.parse_dialog(dialog_file.read_text())
         transcript = dialog.adjust_narrators(raw_transcript)
-        for spoken_text in transcript:
-            self._display_image(spoken_text)
+        for i, spoken_text in enumerate(transcript):
+            self._display_image(spoken_text, image_nr=i)
             # wait time is guessed for now...
             wait = 5 + spoken_text.text.count(" ") * 0.5
             time.sleep(wait)
 
-    def _display_image(self, spoken_text):
+    def _display_image(self, spoken_text, image_nr):
         """ displays an image on the xkcd display
 
         :param pathlib.Path cache_dir: path of the cache directory
@@ -103,8 +103,12 @@ class XKCDDisplayService(Service):
         """
         self.logger.info("displaying image")
         pixel_iterator = renderer.render_xkcd_image_as_pixels(spoken_text.text)
+        if image_nr == 0:
+            self.epd.refresh.slow()
+        else:
+            self.epd._send_white_image(2)
+            self.epd.refresh.quick()
         self.epd.display(pixel_iterator)
-        self.epd.refresh.quick()
         # TODO: show image on ePaper display
         # TODO: move pointer to the speaker
 
@@ -116,7 +120,7 @@ class XKCDDisplayService(Service):
         """
         self.logger.info("rendering break picture")
         if old_selected:
-            text = f"Goodbye {old_selected}, Hello {new_selected}"
+            text = f"Goodbye {old_selected.stem}, Hello {new_selected.stem}"
         else:
             text = f"Starting with {new_selected}"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
