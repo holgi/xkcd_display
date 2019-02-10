@@ -124,8 +124,8 @@ class XKCDDisplayService(Service):
             self.epd.refresh.slow()
         else:
             self.epd.refresh.quick()
-        self.epd.display(pixel_iterator)
         self._move_pointer(spoken_text.speaker)
+        self.epd.display(pixel_iterator)
         # TODO: show image on ePaper display
         # TODO: move pointer to the speaker
 
@@ -141,9 +141,9 @@ class XKCDDisplayService(Service):
         else:
             text = f"Starting with {new_selected.stem}"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
+        self._move_pointer("center")
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
-        self._move_pointer("center")
         time.sleep(5)  # a random guess
         # TODO: implement something nice
         # TODO: show image on ePaper display
@@ -161,9 +161,9 @@ class XKCDDisplayService(Service):
         self.logger.info("rendering goodbye picture")
         text = "Be excellent to each other"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
+        self._move_pointer("center")
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
-        self._move_pointer("center")
         self.epd.sleep()
 
     def _move_pointer(self, where):
