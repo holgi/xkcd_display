@@ -1,5 +1,3 @@
-from enum import Enum
-
 from .config import (
     VCOM_LUT,
     W2W_LUT,
@@ -9,11 +7,6 @@ from .config import (
     send_command,
     send_data_list,
 )
-
-
-class LUT_STATE(Enum):
-    slow = 1
-    quick = 2
 
 
 LUT_VCOM0 = [
@@ -498,29 +491,15 @@ class Refresh:
 
     def __init__(self):
         """ initialize """
-        self.state = None
-        self.set(quick=False)
-
-    def set(self, quick=False):
-        """ set a quick or slow refresh rate
-
-        will only set a new lookup table, if needed.
-        """
-        if quick and self.state != LUT_STATE.quick:
-            self._send_lut(LUT_QUICK)
-            self.state = LUT_STATE.quick
-        elif self.state != LUT_STATE.slow:
-            self._send_lut(LUT_SLOW)
-            self.state = LUT_STATE.slow
-        return self.state
+        self.slow()
 
     def quick(self):
         """ sets a quick refresh rate """
-        return self.set(quick=True)
+        return self._send_lut(LUT_QUICK)
 
     def slow(self):
         """ sets a slow refresh rate """
-        return self.set(quick=False)
+        self._send_lut(LUT_SLOW)
 
     def _send_lut(self, cmd_chain):
         """ sends all commands and data to chane a lookup table """
