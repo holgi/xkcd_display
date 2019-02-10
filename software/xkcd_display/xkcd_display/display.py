@@ -126,7 +126,7 @@ class XKCDDisplayService(Service):
         if old_selected:
             text = f"Goodbye {old_selected.stem}, Hello {new_selected.stem}"
         else:
-            text = f"Starting with {new_selected}"
+            text = f"Starting with {new_selected.stem}"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
