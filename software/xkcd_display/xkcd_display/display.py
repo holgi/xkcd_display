@@ -28,6 +28,11 @@ class XKCDDisplayService(Service):
             )
         )
         self.logger.setLevel(logging.INFO)
+        self._pointer_pos = {
+            "cueball": 5,
+            "megan": 9,
+            "center": 7
+            }
 
     @property
     def epd(self):
@@ -120,6 +125,7 @@ class XKCDDisplayService(Service):
         else:
             self.epd.refresh.quick()
         self.epd.display(pixel_iterator)
+        self.move(spoken_text.speaker)
         # TODO: show image on ePaper display
         # TODO: move pointer to the speaker
 
@@ -137,6 +143,7 @@ class XKCDDisplayService(Service):
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
+        self.move("center")
         time.sleep(5)  # a random guess
         # TODO: implement something nice
         # TODO: show image on ePaper display
@@ -156,4 +163,10 @@ class XKCDDisplayService(Service):
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
+        self.move("center")
         self.epd.sleep()
+
+    def _move_pointer(self, where):
+        """ moves the pointer (servo) to a speaker """
+        pos = self._pointer_pos.get(where.lower(), self._pointer_pos["center"])
+        self.epd.move(pos)

@@ -69,3 +69,7 @@ class EPDummy:
     def _send_white_image(self, transmission):
         """ send a white image to a display buffer """
         pass
+
+    def move(self, pos):
+        """ moves the servo to a given position and turns it of """
+        pass

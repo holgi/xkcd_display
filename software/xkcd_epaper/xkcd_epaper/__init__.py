@@ -5,6 +5,7 @@ from .config import (
     DC_PIN,
     CS_PIN,
     BUSY_PIN,
+    SERVO_PIN,
     SPI,
     BOOSTER_SOFT_START,
     POWER_ON,
@@ -37,6 +38,9 @@ class EPD:
         GPIO.setup(DC_PIN, GPIO.OUT)
         GPIO.setup(CS_PIN, GPIO.OUT)
         GPIO.setup(BUSY_PIN, GPIO.IN)
+        GPIO.setup(SERVO_PIN, GPIO.OUT)
+        self.servo = GPIO.PWM(SERVO_PIN, 50)
+        self.servo.start(0)
         SPI.max_speed_hz = 2000000
         SPI.mode = 0b00
 
@@ -112,3 +116,9 @@ class EPD:
         """ sends all white pixels using a transmission channel """
         send_command(transmission)
         send_data_list(EPD_WHITE_IMAGE)
+
+    def move(self, pos):
+        """ moves the servo to a given position and turns it of """
+        self.servo.ChangeDutyCycle(pos)
+        delay_ms(250)
+        self.servo.ChangeDutyCycle(0)
