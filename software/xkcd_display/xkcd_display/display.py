@@ -102,6 +102,8 @@ class XKCDDisplayService(Service):
             # wait time is guessed for now...
             wait = 5 + spoken_text.text.count(" ") * 0.5
             time.sleep(wait)
+            if self.got_sigterm():
+                break
 
     def _display_image(self, spoken_text, image_nr):
         """ displays an image on the xkcd display
