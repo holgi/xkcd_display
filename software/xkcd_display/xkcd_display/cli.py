@@ -19,12 +19,17 @@ def xkcd():
 
 
 @xkcd.command(short_help="start the xkcd display service")
-def start():
+@click.argument(
+    "dialogs_dir",
+    type=click.Path(
+        exists=True, file_okay=False, dir_okay=True, readable=True
+    ))
+def start(dialogs_dir):
     """ starts the xkcd display service
 
     This will start to render dialogs and show them on the display
     """
-    xd = display.XKCDDisplayService("/Users/holgerfrey/Developer/xkcd_dialogs")
+    xd = display.XKCDDisplayService(dialogs_dir)
     if xd.is_running():
         click.echo("xkcd service already running")
     else:
