@@ -5,7 +5,8 @@ from logging.handlers import SysLogHandler
 
 from .service import find_syslog
 
-class RefreshDummy():
+
+class RefreshDummy:
     def __init__(self):
         self.logger = logging.getLogger("EPDRefreshDummy")
         self.logger.addHandler(

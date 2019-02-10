@@ -23,7 +23,8 @@ def xkcd():
     "dialogs_dir",
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, readable=True
-    ))
+    ),
+)
 def start(dialogs_dir):
     """ starts the xkcd display service
 

@@ -4,14 +4,13 @@ import logging
 import random
 import signal
 import time
-import tempfile
 
 from logging.handlers import SysLogHandler
 from pathlib import Path
 
 from . import dialog
 from . import renderer
-from .service import find_syslog, Service, SERVICE_DEBUG
+from .service import find_syslog, Service
 
 
 class XKCDDisplayService(Service):
@@ -20,7 +19,7 @@ class XKCDDisplayService(Service):
     def __init__(self, dialogs_directory=None):
         """ initialize the display """
         super().__init__(name="xkcdd", pid_dir="/tmp")
-        self.epd = None  # instance will be set in run() method
+        self._epd = None  # instance will be set property function method
         self.dialogs_directory = dialogs_directory
 
         self.logger.addHandler(
@@ -29,9 +28,25 @@ class XKCDDisplayService(Service):
             )
         )
         self.logger.setLevel(logging.INFO)
-        #self.logger.addHandler(logging.FileHandler("debug.log"))
-        #self.logger.setLevel(logging.DEBUG)
-        #self.logger.setLevel(SERVICE_DEBUG)
+
+    @property
+    def epd(self):
+        """ importing and setting the epaper display module
+
+        importing the epaper module takes some time since it sets up the
+        communication with the epaper hardware. We only need the epaper
+        instance in the run method.
+
+        This functionality is provided in a separate function to simplify
+        testing
+        """
+        if self._epd is None:
+            try:
+                from xkcd_epaper import EPD
+            except ImportError:
+                from .epd_dummy import EPDummy as EPD
+            self._epd = EPD()
+        return self._epd
 
     def run(self):
         """ main (background) function to run the display service
@@ -43,11 +58,6 @@ class XKCDDisplayService(Service):
         """
         if self.dialogs_directory is None:
             raise ValueError("dialog directory not set")
-        try:
-            from xkcd_epaper import EPD
-        except ImportError:
-            from .epd_dummy import EPDummy as EPD
-        self.epd = EPD()
         self.epd.init()
         dialogs_path = Path(self.dialogs_directory)
         dialog_files = self._get_dialog_files(dialogs_path)
@@ -125,6 +135,7 @@ class XKCDDisplayService(Service):
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
+        time.sleep(5)  # a random guess
         # TODO: implement something nice
         # TODO: show image on ePaper display
         # TODO: move pointer between speakers
@@ -139,7 +150,8 @@ class XKCDDisplayService(Service):
         # TODO: show image on ePaper display
         # TODO: move pointer between speakers
         self.logger.info("rendering goodbye picture")
-        text = f"Be excellent to each other"
+        text = "Be excellent to each other"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
         self.epd.refresh.slow()
         self.epd.display(pixel_iterator)
+        self.epd.sleep()

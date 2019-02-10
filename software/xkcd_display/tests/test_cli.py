@@ -12,7 +12,7 @@ def test_xkcd_start_already_running(mocker):
     mocker.patch.object(XKCDDisplayService, "start")
 
     runner = CliRunner()
-    result = runner.invoke(xkcd, ["start"])
+    result = runner.invoke(xkcd, ["start", "/tmp"])
 
     assert result.exit_code == 0
     assert "already" in result.output
@@ -29,13 +29,13 @@ def test_xkcd_start_not_running(mocker):
     mocker.patch.object(XKCDDisplayService, "start")
 
     runner = CliRunner()
-    result = runner.invoke(xkcd, ["start"])
+    result = runner.invoke(xkcd, ["start", "/tmp"])
 
     assert result.exit_code == 0
     assert "starting" in result.output
     assert XKCDDisplayService.is_running.call_count == 1
     assert XKCDDisplayService.start.call_count == 1
-    assert XKCDDisplayService.start.call_args == call(dialogs_directory=".")
+    assert XKCDDisplayService.start.call_args == call()
 
 
 def test_xkcd_stop_running(mocker):
