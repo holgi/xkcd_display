@@ -11,26 +11,29 @@ from pathlib import Path
 
 from . import dialog
 from . import renderer
-from .service import find_syslog, Service
+from .service import find_syslog, Service, SERVICE_DEBUG
 
 
 class XKCDDisplayService(Service):
     """ background service to drive and controll the xkcd display"""
 
-    def __init__(self):
+    def __init__(self, dialogs_directory=None):
         """ initialize the display """
         super().__init__(name="xkcdd", pid_dir="/tmp")
-        self.logger.addHandler(logging.FileHandler("debug.log"))
-        self.logger.setLevel(logging.DEBUG)
+        self.epd = None  # instance will be set in run() method
+        self.dialogs_directory = dialogs_directory
 
-        # self.logger.addHandler(
-        #     SysLogHandler(
-        #         address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
-        #     )
-        # )
-        # self.logger.setLevel(logging.INFO)
+        self.logger.addHandler(
+            SysLogHandler(
+                address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
+            )
+        )
+        self.logger.setLevel(logging.INFO)
+        #self.logger.addHandler(logging.FileHandler("debug.log"))
+        #self.logger.setLevel(logging.DEBUG)
+        #self.logger.setLevel(SERVICE_DEBUG)
 
-    def run(self, dialogs_directory):
+    def run(self):
         """ main (background) function to run the display service
 
         This function needs to be defined for service.Service.
@@ -38,12 +41,20 @@ class XKCDDisplayService(Service):
         :param str dialogs_directory:
             directory that holds the dialog textfiles
         """
-        dialogs_directory = Path(dialogs_directory)
-        dialog_files = self._get_dialog_files(dialogs_directory)
+        if self.dialogs_directory is None:
+            raise ValueError("dialog directory not set")
+        try:
+            from xkcd_epaper import EPD
+        except ImportError:
+            from .epd_dummy import EPDummy as EPD
+        self.epd = EPD()
+        self.epd.init()
+        dialogs_path = Path(self.dialogs_directory)
+        dialog_files = self._get_dialog_files(dialogs_path)
         old_selected = None
         while not self.got_sigterm():
             if self.got_signal(signal.SIGHUP, clear=True):
-                dialog_files = self._get_dialog_files(dialogs_directory)
+                dialog_files = self._get_dialog_files(dialogs_path)
             new_selected = random.choice(dialog_files)
             self._show_break_picture(old_selected, new_selected)
             self._display_dialog(new_selected)
@@ -73,7 +84,7 @@ class XKCDDisplayService(Service):
         :param pathlib.Path dialog_file: path of the dialog text file
         """
         xkcd_id = dialog_file.stem
-        self.logger.info("displaying dialog {xkcd_id}")
+        self.logger.info(f"displaying dialog {xkcd_id}")
         raw_transcript = dialog.parse_dialog(dialog_file.read_text())
         transcript = dialog.adjust_narrators(raw_transcript)
         for spoken_text in transcript:
@@ -92,6 +103,8 @@ class XKCDDisplayService(Service):
         """
         self.logger.info("displaying image")
         pixel_iterator = renderer.render_xkcd_image_as_pixels(spoken_text.text)
+        self.epd.display(pixel_iterator)
+        self.epd.refresh.quick()
         # TODO: show image on ePaper display
         # TODO: move pointer to the speaker
 
@@ -101,10 +114,17 @@ class XKCDDisplayService(Service):
         :param pathlib.Path old_selected: path to the last shown dialog
         :param pathlib.Path new_selected: path to the upcoming dialog
         """
+        self.logger.info("rendering break picture")
+        if old_selected:
+            text = f"Goodbye {old_selected}, Hello {new_selected}"
+        else:
+            text = f"Starting with {new_selected}"
+        pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
+        self.epd.refresh.slow()
+        self.epd.display(pixel_iterator)
         # TODO: implement something nice
         # TODO: show image on ePaper display
         # TODO: move pointer between speakers
-        pass
 
     def _show_goodbye_picture(self):
         """ displays a goodbye message
@@ -115,4 +135,8 @@ class XKCDDisplayService(Service):
         # TODO: implement something nice
         # TODO: show image on ePaper display
         # TODO: move pointer between speakers
-        pass
+        self.logger.info("rendering goodbye picture")
+        text = f"Be excellent to each other"
+        pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
+        self.epd.refresh.slow()
+        self.epd.display(pixel_iterator)

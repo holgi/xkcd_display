@@ -14,75 +14,60 @@ from . import display
 
 
 @click.group()
-@click.pass_context
-def xkcd(context):
-    """ controll the dedicated xkcd display
-
-    :param click.Context context: command line context
-    """
-    context.ensure_object(display.XKCDDisplayService)
-    context.obj = display.XKCDDisplayService()
+def xkcd():
+    """ controll the dedicated xkcd display"""
 
 
 @xkcd.command(short_help="start the xkcd display service")
-@click.pass_context
-def start(context):
+def start():
     """ starts the xkcd display service
 
     This will start to render dialogs and show them on the display
-
-    :param click.Context context: command line context
     """
-    if context.obj.is_running():
+    xd = display.XKCDDisplayService("/Users/holgerfrey/Developer/xkcd_dialogs")
+    if xd.is_running():
         click.echo("xkcd service already running")
     else:
         click.echo("starting xkcd service")
-        context.obj.start(dialogs_directory=".")
+        xd.start()
 
 
 @xkcd.command(short_help="stop the xkcd display service")
-@click.pass_context
-def stop(context):
+def stop():
     """ stop the xkcd display service
 
     This will stop the display service after the last panel of the current
     dialog was displayed.
-
-    :param click.Context context: command line context
     """
-    if context.obj.is_running():
+    xd = display.XKCDDisplayService()
+    if xd.is_running():
         click.echo("stopping xkcd servie")
-        context.obj.stop()
+        xd.stop()
     else:
         click.echo("xkcd service not running")
 
 
 @xkcd.command(short_help="is the xkcd display service running?")
-@click.pass_context
-def status(context):
-    """ reports if the xkcd display service is running
-
-    :param click.Context context: command line context
-    """
-    if context.obj.is_running():
+def status():
+    """ reports if the xkcd display service is running """
+    xd = display.XKCDDisplayService()
+    if xd.is_running():
         click.echo(click.style("xkcd service is running.", fg="green"))
     else:
         click.echo(click.style("xkcd service is stopped.", fg="red"))
 
 
 @xkcd.command(short_help="gracefully reload the xkcd display service")
-@click.pass_context
-def reload(context):
+def reload():
     """ will gracefully reload the xkcd display service
 
     The configuration and dialogs are reloaded after the current dialog is
     finished. Useful if new dialogs are added.
-
-    :param click.Context context: command line context
     """
-    if context.obj.is_running():
+    xd = display.XKCDDisplayService()
+    if xd.is_running():
         click.echo("gracefully reloading changes")
-        context.obj.send_signal(signal.SIGHUP)
+        xd.send_signal(signal.SIGHUP)
     else:
         click.echo("xkcd service not running")
 

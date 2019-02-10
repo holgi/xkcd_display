@@ -451,6 +451,7 @@ class Service(object):
         .. versionadded:: 0.3
             The ``block`` parameter
         """
+        self._debug("called start")
         pid = self.get_pid()
         if pid:
             raise ValueError("Daemon is already running at PID %d." % pid)
