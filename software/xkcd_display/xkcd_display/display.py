@@ -45,11 +45,8 @@ class XKCDDisplayService(Service):
             raise ValueError("dialog directory not set")
         try:
             from xkcd_epaper import EPD
-            from xkcd_epaper.config import DATA_START_TRANSMISSION_1
-            self.white = DATA_START_TRANSMISSION_1
         except ImportError:
             from .epd_dummy import EPDummy as EPD
-            self.white = None
         self.epd = EPD()
         self.epd.init()
         dialogs_path = Path(self.dialogs_directory)
@@ -109,8 +106,6 @@ class XKCDDisplayService(Service):
         if image_nr == 0:
             self.epd.refresh.slow()
         else:
-            self.epd.refresh.quick()
-            self.epd._send_white_image(self.white)
             self.epd.refresh.quick()
         self.epd.display(pixel_iterator)
         # TODO: show image on ePaper display
