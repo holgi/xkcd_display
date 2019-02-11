@@ -24,6 +24,7 @@ rpi_interface = EPD()
 rpi_interface.init()
 
 # show a picture and move the servo
+# the pixel list must consist of 400 x 300 items (pixels) with pixel intensities
 rpi_interface.show_and_move(pixel_list, quick_refresh=False, servo_pos=5)
 ```
 

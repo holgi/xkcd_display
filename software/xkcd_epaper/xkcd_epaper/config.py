@@ -15,12 +15,13 @@ SERVO_PIN = 18
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)
 try:
+    # set the spi buffer size by checking the system
     result = subprocess.check_output(
         ["cat", "/sys/module/spidev/parameters/bufsiz"]
     )
     SPI_BUFFER_SIZE = int(result.strip())
 except Exception:
-    # small, but should do the trick
+    # something went wrong; using a small buffer size, but should do the trick
     SPI_BUFFER_SIZE = 512
 
 # Display resolution
@@ -72,7 +73,10 @@ POWER_SAVING = 0xE3
 
 
 def delay_ms(delaytime):
-    """ small wrapper around time.sleep() """
+    """ small wrapper around time.sleep()
+
+    :delaytime int: miliseconds to sleep
+    """
     time.sleep(delaytime / 1000.0)
 
 
@@ -80,29 +84,44 @@ def grouper(iterable, n, fillvalue=None):
     """ split an iterable in groups of n items
 
     shamelessly copied from https://docs.python.org/3/library/itertools.html
+
+    Example:
+        grouped = grouper(range(10), 3, fillvalue="x")
+        list(grouped) == [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 'x', 'x')]
+
+    :iterable iterable: the iterable to group by a number of items
+    :n int: number of items in one group
+    :fillvalue: value to fill an incomplete group with
     """
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
 
 def send_command(command):
-    """ send a command to the display """
+    """ send a command to the display via the spi bus
+
+    :command int: command to send
+    """
     GPIO.output(DC_PIN, GPIO.LOW)
     SPI.writebytes([command])
 
 
 def send_data_byte(data):
-    """ sends one byte of data to the display """
+    """ sends one byte of data to the display via the spi bus
+
+    :data int: command to send
+    """
     GPIO.output(DC_PIN, GPIO.HIGH)
     SPI.writebytes([data])
 
 
 def send_data_list(data):
-    """ send lot of data to the display
+    """ send lot of data to the display via the spie bus
 
     the installed version of spidev doesn't have the writebytes2 function;
-    this is a pure python implementation. The buffer size is only half of
-    the size reported
+    this is a pure python implementation.
+
+    :data iterable: list of bytes to send to the display
     """
     GPIO.output(DC_PIN, GPIO.HIGH)
     for buffer in grouper(data, SPI_BUFFER_SIZE):

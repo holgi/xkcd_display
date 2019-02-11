@@ -80,7 +80,8 @@ class EPD:
     def display(self, pixels):
         """ display an image
 
-        the pixel values should amount to a length of 400 x 300 items
+        :pixels iterable:
+            list of pixel intensities, must have a length of 400 x 300 items
         """
         send_command(DATA_START_TRANSMISSION_1)
         send_data_list(self._old_buffer)
@@ -104,7 +105,14 @@ class EPD:
             delay_ms(100)
 
     def _buffer_from_pixels(self, pixels):
-        """ generator: yield buffer values from pixel list """
+        """ generator: yield buffer values from pixel list
+
+        Transforms a list of pixel intensities into a bytes list expected
+        by the epaper display. One byte (eight bits) drive eight pixels
+
+        :pixels iterable: list of pixel intensities
+        :returns generator: generator of buffer bytes for the epaper display
+        """
         for pixel_group in grouper(pixels, 8):
             byte = 0xFF
             for group_pos, pixel_value in enumerate(pixel_group):
@@ -112,13 +120,20 @@ class EPD:
                     byte &= ~(0x80 >> group_pos)
             yield byte
 
-    def _send_white_image(self, transmission):
-        """ sends all white pixels using a transmission channel """
-        send_command(transmission)
+    def _send_white_image(self, transmission_channel):
+        """ sends all white pixels using a transmission channel
+
+        :transmission_channel int:
+            one of DATA_START_TRANSMISSION_1 or DATA_START_TRANSMISSION_2
+        """
+        send_command(transmission_channel)
         send_data_list(EPD_WHITE_IMAGE)
 
     def move(self, pos):
-        """ moves the servo to a given position and turns it of """
+        """ moves the servo to a given position
+
+        :pos int: position to move the servo to
+        """
         self.servo.ChangeDutyCycle(pos)
 
     def show_and_move(self, pixel_list, quick_refresh=False, move_to=5):
@@ -141,13 +156,13 @@ class EPD:
         # prepare the image data end send it to the display
         send_command(DATA_START_TRANSMISSION_1)
         send_data_list(self._old_buffer)
-        buffer = list(self._buffer_from_pixels(pixels))
+        buffer = list(self._buffer_from_pixels(pixel_list))
         send_command(DATA_START_TRANSMISSION_2)
         send_data_list(buffer)
         self._old_buffer = buffer
 
         # move the servo
-        self.servo.ChangeDutyCycle(pos)
+        self.servo.ChangeDutyCycle(move_to)
 
         # trigger the display refresh and wait until done
         send_command(DISPLAY_REFRESH)

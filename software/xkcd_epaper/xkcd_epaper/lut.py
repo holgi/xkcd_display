@@ -502,7 +502,10 @@ class Refresh:
         self._send_lut(LUT_SLOW)
 
     def _send_lut(self, cmd_chain):
-        """ sends all commands and data to chane a lookup table """
+        """ sends all commands and data to chane a lookup table
+
+        :cmd_chain tuple: one of LUT_SLOW or LUT_QUICK
+        """
         for command, data in cmd_chain:
             send_command(command)
             send_data_list(data)
