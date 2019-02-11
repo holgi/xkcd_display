@@ -73,3 +73,6 @@ class EPDummy:
     def move(self, pos):
         """ moves the servo to a given position and turns it of """
         pass
+
+    def show_and_move(self, pixel_list, quick_refresh=False, move_to=5):
+        """ displays an image and moves the servo """

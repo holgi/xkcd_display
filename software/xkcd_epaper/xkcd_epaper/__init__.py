@@ -120,5 +120,38 @@ class EPD:
     def move(self, pos):
         """ moves the servo to a given position and turns it of """
         self.servo.ChangeDutyCycle(pos)
-        delay_ms(250)
+
+    def show_and_move(self, pixel_list, quick_refresh=False, move_to=5):
+        """ display an image and move the servo to a given position
+
+        This method tries to synchronize servo movement and image display.
+
+        The pixel list must be a length of 400 x 300 items
+
+        :pixel_list list: an iterable with pixel intensity values
+        :quick_refresh bool: use a quick refresh or a slow, flickering one
+        :move_to int: move the servo to this position
+        """
+        # set the display refresh method
+        if quick_refresh:
+            self.refresh.quick()
+        else:
+            self.refresh.slow()
+
+        # prepare the image data end send it to the display
+        send_command(DATA_START_TRANSMISSION_1)
+        send_data_list(self._old_buffer)
+        buffer = list(self._buffer_from_pixels(pixels))
+        send_command(DATA_START_TRANSMISSION_2)
+        send_data_list(buffer)
+        self._old_buffer = buffer
+
+        # move the servo
+        self.servo.ChangeDutyCycle(pos)
+
+        # trigger the display refresh and wait until done
+        send_command(DISPLAY_REFRESH)
+        self.wait_until_idle()
+
+        # turn off the servo
         self.servo.ChangeDutyCycle(0)

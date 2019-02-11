@@ -3,7 +3,7 @@ import tempfile
 import time
 
 from pathlib import Path
-from unittest.mock import call
+from unittest.mock import ANY, call
 
 
 EXAMPLE_DIALOG = """
@@ -91,25 +91,39 @@ def test_display_dialog(tmp_path, mocker):
     assert time.sleep.call_args_list == [call(6), call(5), call(7)]
 
 
-@pytest.mark.parametrize("image_nr", [0, 1])
-def test_display_image(mocker, image_nr):
+def test_display_dialog_exit_on_sigterm(tmp_path, mocker):
+    from xkcd_display.display import XKCDDisplayService
+    from xkcd_display.dialog import SpokenText
+
+    mocker.patch.object(XKCDDisplayService, "_display_image")
+    mocker.patch.object(XKCDDisplayService, "got_sigterm", return_value=True)
+    mocker.patch("time.sleep")
+    dialog_file = tmp_path / "one_dialog.txt"
+    dialog_file.write_text(EXAMPLE_DIALOG)
+
+    XKCDDisplayService()._display_dialog(dialog_file)
+
+    assert XKCDDisplayService._display_image.call_count == 1
+    assert time.sleep.call_count == 1
+
+@pytest.mark.parametrize("img_nr,refresh", [(0, False), (1, True)])
+def test_display_image(mocker, img_nr, refresh):
     from xkcd_display.display import XKCDDisplayService
     from xkcd_display.dialog import SpokenText
 
     mocker.patch("xkcd_display.renderer.render_xkcd_image_as_pixels")
-    mocker.patch("xkcd_display.epd_dummy.RefreshDummy.slow")
-    mocker.patch("xkcd_display.epd_dummy.RefreshDummy.quick")
+    mocker.patch("xkcd_display.epd_dummy.EPDummy.show_and_move")
 
     XKCDDisplayService()._display_image(
-        SpokenText(speaker="megan", text="*sigh*"), image_nr=image_nr
+        SpokenText(speaker="megan", text="*sigh*"), image_nr=img_nr
     )
     from xkcd_display.renderer import render_xkcd_image_as_pixels
-    from xkcd_display.epd_dummy import RefreshDummy
+    from xkcd_display.epd_dummy import EPDummy
 
     assert render_xkcd_image_as_pixels.call_count == 1
     assert render_xkcd_image_as_pixels.call_args == call("*sigh*")
-    assert RefreshDummy.slow.call_count + RefreshDummy.quick.call_count == 1
-    assert RefreshDummy.slow.call_count != RefreshDummy.quick.call_count
+    assert EPDummy.show_and_move.call_count == 1
+    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=refresh, move_to=9)
 
 
 def test_run_raises_error_if_path_not_set(tmp_path, mocker):
@@ -230,13 +244,12 @@ def test_show_break_picture(mocker, old, new):
         "xkcd_display.renderer.render_xkcd_image_as_pixels",
         return_value="pixels",
     )
-    mocker.patch("xkcd_display.epd_dummy.RefreshDummy.slow")
-    mocker.patch("xkcd_display.epd_dummy.EPDummy.display")
+    mocker.patch("xkcd_display.epd_dummy.EPDummy.show_and_move")
     mocker.patch.object(time, "sleep")
 
     XKCDDisplayService()._show_break_picture(old, new)
     from xkcd_display.renderer import render_xkcd_image_as_pixels
-    from xkcd_display.epd_dummy import RefreshDummy, EPDummy
+    from xkcd_display.epd_dummy import EPDummy
 
     assert render_xkcd_image_as_pixels.call_count == 1
     if old is None:
@@ -244,9 +257,8 @@ def test_show_break_picture(mocker, old, new):
     else:
         assert old.stem in render_xkcd_image_as_pixels.call_args[0][0]
     assert new.stem in render_xkcd_image_as_pixels.call_args[0][0]
-    assert RefreshDummy.slow.call_count == 1
-    assert EPDummy.display.call_count == 1
-    assert EPDummy.display.call_args == call("pixels")
+    assert EPDummy.show_and_move.call_count == 1
+    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=False, move_to=7)
     assert time.sleep.call_count == 1
     assert time.sleep.call_args == call(5)
 
@@ -258,8 +270,7 @@ def test_show_goodbye_picture(mocker):
         "xkcd_display.renderer.render_xkcd_image_as_pixels",
         return_value="pixels",
     )
-    mocker.patch("xkcd_display.epd_dummy.RefreshDummy.slow")
-    mocker.patch("xkcd_display.epd_dummy.EPDummy.display")
+    mocker.patch("xkcd_display.epd_dummy.EPDummy.show_and_move")
     mocker.patch("xkcd_display.epd_dummy.EPDummy.sleep")
 
     XKCDDisplayService()._show_goodbye_picture()
@@ -270,8 +281,7 @@ def test_show_goodbye_picture(mocker):
     assert render_xkcd_image_as_pixels.call_args == call(
         "Be excellent to each other"
     )
-    assert RefreshDummy.slow.call_count == 1
-    assert EPDummy.display.call_count == 1
-    assert EPDummy.display.call_args == call("pixels")
+    assert EPDummy.show_and_move.call_count == 1
+    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=False, move_to=7)
     assert EPDummy.sleep.call_count == 1
     assert EPDummy.sleep.call_args == call()

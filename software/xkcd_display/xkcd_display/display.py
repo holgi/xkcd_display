@@ -21,19 +21,13 @@ class XKCDDisplayService(Service):
         super().__init__(name="xkcdd", pid_dir="/tmp")
         self._epd = None  # instance will be set property function method
         self.dialogs_directory = dialogs_directory
-        self._pointer_pos = {
-            "cueball": 5,
-            "megan": 9,
-            "center": 7,
-        }
+        self._pointer_pos = {"cueball": 5, "megan": 9, "center": 7}
         self.logger.addHandler(
             SysLogHandler(
                 address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
             )
         )
         self.logger.setLevel(logging.INFO)
-
-
 
     @property
     def epd(self):
@@ -121,11 +115,10 @@ class XKCDDisplayService(Service):
         """
         self.logger.info("displaying image")
         pixel_iterator = renderer.render_xkcd_image_as_pixels(spoken_text.text)
-        if image_nr == 0:
-            self.epd.refresh.slow()
-        else:
-            self.epd.refresh.quick()
-        self._move_and_display(spoken_text.speaker, pixel_iterator)
+        pos = self._pointer_pos[spoken_text.speaker.lower()]
+        self.epd.show_and_move(
+            pixel_iterator, quick_refresh=bool(image_nr), move_to=pos
+        )
 
     def _show_break_picture(self, old_selected, new_selected):
         """ displays a picture in between two dialogs
@@ -139,8 +132,11 @@ class XKCDDisplayService(Service):
         else:
             text = f"Starting with {new_selected.stem}"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
-        self.epd.refresh.slow()
-        self._move_and_display("center", pixel_iterator)
+        self.epd.show_and_move(
+            pixel_iterator,
+            quick_refresh=False,
+            move_to=self._pointer_pos["center"],
+        )
         time.sleep(5)  # a random guess
 
     def _show_goodbye_picture(self):
@@ -152,13 +148,9 @@ class XKCDDisplayService(Service):
         self.logger.info("rendering goodbye picture")
         text = "Be excellent to each other"
         pixel_iterator = renderer.render_xkcd_image_as_pixels(text)
-        self.epd.refresh.slow()
-        self._move_and_display("center", pixel_iterator)
+        self.epd.show_and_move(
+            pixel_iterator,
+            quick_refresh=False,
+            move_to=self._pointer_pos["center"],
+        )
         self.epd.sleep()
-
-    def _move_and_display(self, where, pixel_iterator):
-        """ moves the pointer (servo) to a speaker """
-        pos = self._pointer_pos.get(where.lower(), self._pointer_pos["center"])
-        self.epd.move(pos)
-        self.epd.display(pixel_iterator)
-        self.epd.move(0)
