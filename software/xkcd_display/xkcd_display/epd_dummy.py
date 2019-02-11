@@ -40,39 +40,9 @@ class EPDummy:
     def init(self):
         self.logger.debug("initializing the display")
 
-    def reset(self):
-        """ hardware reset
-
-        setting the reset pin from high to low resets the module
-        """
-        self.logger.debug("sending hardware reset")
-
-    def clear(self):
-        """ clear the display with a white image """
-        self.logger.debug("clearing display")
-
-    def display(self, pixels):
-        """ display an image
-
-        the pixel values should amount to a length of 400 x 300 items
-        """
-        self.logger.debug("displaying image")
-
     def sleep(self):
         """ send the display into sleep """
         self.logger.debug("going to sleep")
-
-    def wait_until_idle(self):
-        """ wait for the display """
-        pass
-
-    def _send_white_image(self, transmission):
-        """ send a white image to a display buffer """
-        pass
-
-    def move(self, pos):
-        """ moves the servo to a given position and turns it of """
-        pass
 
     def show_and_move(self, pixel_list, quick_refresh=False, move_to=5):
         """ displays an image and moves the servo """
