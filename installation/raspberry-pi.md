@@ -96,8 +96,8 @@ After adding the new user – let's cal her *jane* from now on - you should test
 if you can log on to the Raspberry with the new account. So on your local
 machine start a new ssh session with `ssh jane@10.0.0.100`. You should be abel
 to log in with Jane's password. The next test would be if you can run a command
-as root user: `sudo ls`. This should prompt you once again for the password and
-should work without an error.
+as root user: `sudo ls /`. This should prompt you once again for the password
+and should work without an error.
 
 
 More security (and convenience)
@@ -145,9 +145,13 @@ attaching a monitor and a keyboard. This is all done on your Rapsberry Pi, so
 start a new ssh session if there is not already one open.
 
 We need to edit the sshd config file - note the extra 'd' at the end of 'ssh' -
-as root user: `sudoedit /etc/ssh/sshd_config`. Scroll down to the line
-`#PasswordAuthentication yes`, remove the pound sign and change yes to no. The
-line should look this way: `PasswordAuthentication no`
+as root user: `sudoedit /etc/ssh/sshd_config`. Move down to the line
+`#PubkeyAuthentication yes` and remove the pound sign, the line should be
+`PubkeyAuthentication yes`.
+
+Scroll further down to the line `#PasswordAuthentication yes`, again remove the
+pound sign and change yes to no. The line should look this way:
+`PasswordAuthentication no`
 
 Probably the next line is `#PermitEmptyPasswords no`. Just remove the pound
 sign so it looks like `PermitEmptyPasswords no`.
@@ -184,13 +188,16 @@ order you like but I'd recommend the following:
  1. `Boot Options > Desktop / CLI > Console`: You don't need to start a full
     fledged graphical desktop environment if no monitor is connected - at least
     I think so.
- 1. `Localization options > Set locale`: you first need to select the locales
+ 1. `Localization options > Change Locale`: you first need to select the locales
     that should be installed and in the next step the one to use. I selected
     'en_US.UTF-8' since this is the same as on my local machine
- 1. `Localization options > T2 set timezones`: your choice, you know where you
+ 1. `Localization options > Change timezones`: your choice, you know where you
     live
  1. `Advanced options > Expand file system`: This will let you use all of
     memory of the SD card.
+
+You'll be asked to reboot. I would do so, so the file system can be expanded to
+use the whole SD card.
 
 
 Updates, Updates, Updates
@@ -210,13 +217,16 @@ and components:
 Finished!
 ---------
 
-Phew. The basic Raspberry Pi setup is done. Except for enabling I2C and SPI
-there was nothing too specific to the xkcd display in this so far. You can now
-install and use this thing for what ever you like.
+Phew. The basic Raspberry Pi setup is done. There was nothing specific for the
+xkcd display in this so far. You can now install and use this thing for what
+ever you like.
 
 
 Addition: Getting Comfy
 -----------------------
+
+My favorite text editor for the command line (vim) is luckily just one install
+away: `sudo apt-get install vim`.
 
 I personally don't like the provided bash shell. I switched to zsh a couple of
 years ago and want it also on my Raspberry. So why do I put this here in this
