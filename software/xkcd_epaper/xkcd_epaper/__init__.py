@@ -164,11 +164,11 @@ class EPD:
         # trigger the display refresh
         send_command(DISPLAY_REFRESH)
 
-        # move the servo
+        # move the servo, give it some time to move and turn it of
         self.servo.ChangeDutyCycle(move_to)
+        delay_ms(250)
+        # turn off the servo
+        self.servo.ChangeDutyCycle(0)
 
         # wait until display refresh is done
         self.wait_until_idle()
-
-        # turn off the servo
-        self.servo.ChangeDutyCycle(0)
