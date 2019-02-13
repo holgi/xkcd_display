@@ -161,11 +161,13 @@ class EPD:
         send_data_list(buffer)
         self._old_buffer = buffer
 
+        # trigger the display refresh
+        send_command(DISPLAY_REFRESH)
+
         # move the servo
         self.servo.ChangeDutyCycle(move_to)
 
-        # trigger the display refresh and wait until done
-        send_command(DISPLAY_REFRESH)
+        # wait until display refresh is done
         self.wait_until_idle()
 
         # turn off the servo

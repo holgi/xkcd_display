@@ -44,7 +44,7 @@ A dummy implementation of the hardware interface found in the `xkcd_epaper`
 package. mainly used for testing.
 
 
-#### renderer
+### renderer
 
 This module does the heavy lifting. I takes parsed dialogs, figures out the
 best parameters and renders the images.
