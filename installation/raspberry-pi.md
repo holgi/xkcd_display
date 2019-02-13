@@ -40,6 +40,25 @@ any other. If this file is present on boot, the server side ssh daemon will be
 launched as soon as the system has booted. If it's missing, you'd only be able
 to login with an attached keyboard and monitor.
 
+If you have a Raspberry Pi with WLAN and want to use it from the start - e.g.
+on a Raspberry Pi Zero W - you need to add another file to the root folder of
+the SD card. The file must be named `wpa_supplicant.conf` and the content
+should be something like this:
+
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="test"
+    psk="mypassword"
+    key_mgmt=WPA-PSK
+}
+```
+
+Of cause you should replace the value for `ssid` with the name of your WLAN and
+the value of `psk` with the password of the connection.
+
 
 First Boot
 ----------
@@ -170,8 +189,6 @@ order you like but I'd recommend the following:
     'en_US.UTF-8' since this is the same as on my local machine
  1. `Localization options > T2 set timezones`: your choice, you know where you
     live
- 1. `Interfacing options > I2C -> yes`: needed for the display
- 1. `Interfacing options > SPI -> yes`: also needed for the display
  1. `Advanced options > Expand file system`: This will let you use all of
     memory of the SD card.
 
