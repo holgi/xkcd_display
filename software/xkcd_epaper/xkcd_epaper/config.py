@@ -11,6 +11,7 @@ DC_PIN = 25
 CS_PIN = 8
 BUSY_PIN = 24
 SERVO_PIN = 18
+LED_PIN = 22
 
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)

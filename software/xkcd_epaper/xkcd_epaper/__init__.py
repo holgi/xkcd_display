@@ -6,6 +6,7 @@ from .config import (
     CS_PIN,
     BUSY_PIN,
     SERVO_PIN,
+    LED_PIN,
     SPI,
     BOOSTER_SOFT_START,
     POWER_ON,
@@ -39,8 +40,11 @@ class EPD:
         GPIO.setup(CS_PIN, GPIO.OUT)
         GPIO.setup(BUSY_PIN, GPIO.IN)
         GPIO.setup(SERVO_PIN, GPIO.OUT)
+        GPIO.setup(LED_PIN, GPIO.OUT)
         self.servo = GPIO.PWM(SERVO_PIN, 50)
         self.servo.start(0)
+        self.leds = GPIO.PWM(LED_PIN, 60)
+        self.leds.start(0)
         SPI.max_speed_hz = 2000000
         SPI.mode = 0b00
 
@@ -98,6 +102,9 @@ class EPD:
         self.wait_until_idle()
         send_command(DEEP_SLEEP)
         send_data_byte(0xA5)
+        self.servo.stop()
+        self.leds.stop()
+        GPIO.cleanup()
 
     def wait_until_idle(self):
         """ wait for the display """
@@ -135,6 +142,13 @@ class EPD:
         :pos int: position to move the servo to
         """
         self.servo.ChangeDutyCycle(pos)
+
+    def brightness(self, value):
+        """ moves the servo to a given position
+
+        :pos int: position to move the servo to
+        """
+        self.leds.ChangeDutyCycle(value)
 
     def show_and_move(self, pixel_list, quick_refresh=False, move_to=5):
         """ display an image and move the servo to a given position
