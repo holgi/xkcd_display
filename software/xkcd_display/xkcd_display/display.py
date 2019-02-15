@@ -21,7 +21,7 @@ class XKCDDisplayService(Service):
         super().__init__(name="xkcdd", pid_dir="/tmp")
         self._epd = None  # instance will be set property function method
         self.dialogs_directory = dialogs_directory
-        self._pointer_pos = {"cueball": 5, "megan": 9, "center": 7}
+        self._pointer_pos = {"cueball": 5, "megan": 10, "center": 7.5}
         self.logger.addHandler(
             SysLogHandler(
                 address=find_syslog(), facility=SysLogHandler.LOG_DAEMON
