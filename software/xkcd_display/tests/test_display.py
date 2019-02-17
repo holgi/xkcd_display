@@ -106,6 +106,7 @@ def test_display_dialog_exit_on_sigterm(tmp_path, mocker):
     assert XKCDDisplayService._display_image.call_count == 1
     assert time.sleep.call_count == 1
 
+
 @pytest.mark.parametrize("img_nr,refresh", [(0, False), (1, True)])
 def test_display_image(mocker, img_nr, refresh):
     from xkcd_display.display import XKCDDisplayService
@@ -123,7 +124,9 @@ def test_display_image(mocker, img_nr, refresh):
     assert render_xkcd_image_as_pixels.call_count == 1
     assert render_xkcd_image_as_pixels.call_args == call("*sigh*")
     assert EPDummy.show_and_move.call_count == 1
-    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=refresh, move_to=9)
+    assert EPDummy.show_and_move.call_args == call(
+        ANY, quick_refresh=refresh, move_to=9
+    )
 
 
 def test_run_raises_error_if_path_not_set(tmp_path, mocker):
@@ -258,7 +261,9 @@ def test_show_break_picture(mocker, old, new):
         assert old.stem in render_xkcd_image_as_pixels.call_args[0][0]
     assert new.stem in render_xkcd_image_as_pixels.call_args[0][0]
     assert EPDummy.show_and_move.call_count == 1
-    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=False, move_to=7)
+    assert EPDummy.show_and_move.call_args == call(
+        ANY, quick_refresh=False, move_to=7
+    )
     assert time.sleep.call_count == 1
     assert time.sleep.call_args == call(5)
 
@@ -282,6 +287,8 @@ def test_show_goodbye_picture(mocker):
         "Be excellent to each other"
     )
     assert EPDummy.show_and_move.call_count == 1
-    assert EPDummy.show_and_move.call_args == call(ANY, quick_refresh=False, move_to=7)
+    assert EPDummy.show_and_move.call_args == call(
+        ANY, quick_refresh=False, move_to=7
+    )
     assert EPDummy.sleep.call_count == 1
     assert EPDummy.sleep.call_args == call()

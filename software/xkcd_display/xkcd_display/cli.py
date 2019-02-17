@@ -28,7 +28,8 @@ def xkcd():
 def start(dialogs_dir):
     """ starts the xkcd display service
 
-    This will start to render dialogs and show them on the display
+    This will start the daemon only.
+    Follow up with `xkcd play` to show the dialogs on the display
     """
     xd = display.XKCDDisplayService(dialogs_dir)
     if xd.is_running():
@@ -36,6 +37,34 @@ def start(dialogs_dir):
     else:
         click.echo("starting xkcd service")
         xd.start()
+
+
+@xkcd.command(short_help="show the dialogs on the display")
+def play():
+    """ start showing the dialogs ont the display
+
+    To pause the display, use `xkcd pause`.
+    """
+    xd = display.XKCDDisplayService()
+    if xd.is_running():
+        click.echo("showing the dialogs")
+        xd.send_signal(signal.SIGUSR1)
+    else:
+        click.echo("xkcd service not running")
+
+
+@xkcd.command(short_help="pause the dialogs on the display")
+def pause():
+    """ pause the dialogs on the display
+
+    To show the dialogs, use `xkcd play`.
+    """
+    xd = display.XKCDDisplayService()
+    if xd.is_running():
+        click.echo("pausig the dialogs")
+        xd.send_signal(signal.SIGUSR2)
+    else:
+        click.echo("xkcd service not running")
 
 
 @xkcd.command(short_help="stop the xkcd display service")
@@ -47,7 +76,7 @@ def stop():
     """
     xd = display.XKCDDisplayService()
     if xd.is_running():
-        click.echo("stopping xkcd servie")
+        click.echo("stopping xkcd service")
         xd.stop()
     else:
         click.echo("xkcd service not running")

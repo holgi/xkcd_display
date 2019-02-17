@@ -1,5 +1,4 @@
 """ shows a xkcd panel image on the dedicated display """
-
 import logging
 import random
 import signal
@@ -18,7 +17,11 @@ class XKCDDisplayService(Service):
 
     def __init__(self, dialogs_directory=None):
         """ initialize the display """
-        super().__init__(name="xkcdd", pid_dir="/tmp")
+        super().__init__(
+            name="xkcdd",
+            pid_dir="/tmp",
+            custom_signals=[signal.SIGHUP, signal.SIGUSR1, signal.SIGUSR2],
+        )
         self._epd = None  # instance will be set property function method
         self.dialogs_directory = dialogs_directory
         self._pointer_pos = {"cueball": 5, "megan": 10, "center": 7.5}
@@ -62,14 +65,31 @@ class XKCDDisplayService(Service):
         dialogs_path = Path(self.dialogs_directory)
         dialog_files = self._get_dialog_files(dialogs_path)
         old_selected = None
+        is_paused = True
+        # main loop
         while not self.got_sigterm():
+            # reload dialog files
             if self.got_signal(signal.SIGHUP, clear=True):
                 dialog_files = self._get_dialog_files(dialogs_path)
-            new_selected = random.choice(dialog_files)
-            self._show_break_picture(old_selected, new_selected)
-            self._display_dialog(new_selected)
-            old_selected = new_selected
-        self._show_goodbye_picture()
+            # getting the "Pause Signal", show goodbye picture if running
+            if self.got_singal(signal.SIGUSR2, clear=True):
+                if not is_paused:
+                    self._show_goodbye_picture()
+                is_paused = True
+            # getting the "Play Signal"
+            if self.got_singal(signal.SIGUSR1, clear=True):
+                is_paused = False
+            if is_paused:
+                time.sleep(1)
+            else:
+                new_selected = random.choice(dialog_files)
+                self._show_break_picture(old_selected, new_selected)
+                self._display_dialog(new_selected)
+                old_selected = new_selected
+        # main loop exited
+        if not is_paused:
+            self._show_goodbye_picture()
+        self.epd.sleep()
 
     def _get_dialog_files(self, dialogs_directory):
         """ gets all available dialog text files
@@ -153,4 +173,3 @@ class XKCDDisplayService(Service):
             quick_refresh=False,
             move_to=self._pointer_pos["center"],
         )
-        self.epd.sleep()
