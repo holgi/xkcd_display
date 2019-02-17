@@ -61,7 +61,7 @@ def pause():
     """
     xd = display.XKCDDisplayService()
     if xd.is_running():
-        click.echo("pausig the dialogs")
+        click.echo("pausing the dialogs")
         xd.send_signal(signal.SIGUSR2)
     else:
         click.echo("xkcd service not running")

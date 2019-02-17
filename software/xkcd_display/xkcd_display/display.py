@@ -72,12 +72,12 @@ class XKCDDisplayService(Service):
             if self.got_signal(signal.SIGHUP, clear=True):
                 dialog_files = self._get_dialog_files(dialogs_path)
             # getting the "Pause Signal", show goodbye picture if running
-            if self.got_singal(signal.SIGUSR2, clear=True):
+            if self.got_signal(signal.SIGUSR2, clear=True):
                 if not is_paused:
                     self._show_goodbye_picture()
                 is_paused = True
             # getting the "Play Signal"
-            if self.got_singal(signal.SIGUSR1, clear=True):
+            if self.got_signal(signal.SIGUSR1, clear=True):
                 is_paused = False
             if is_paused:
                 time.sleep(1)

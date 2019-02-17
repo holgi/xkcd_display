@@ -38,7 +38,7 @@ def test_xkcd_start_not_running(mocker):
     assert XKCDDisplayService.start.call_args == call()
 
 
-def test_xkcd_stop_running(mocker):
+def test_xkcd_quit_running(mocker):
     from xkcd_display.cli import xkcd
     from xkcd_display.display import XKCDDisplayService
 
@@ -46,7 +46,7 @@ def test_xkcd_stop_running(mocker):
     mocker.patch.object(XKCDDisplayService, "stop")
 
     runner = CliRunner()
-    result = runner.invoke(xkcd, ["stop"])
+    result = runner.invoke(xkcd, ["quit"])
 
     assert result.exit_code == 0
     assert "stopping" in result.output
@@ -56,7 +56,7 @@ def test_xkcd_stop_running(mocker):
     assert XKCDDisplayService.stop.call_args == call()
 
 
-def test_xkcd_stop_not_running(mocker):
+def test_xkcd_quit_not_running(mocker):
     from xkcd_display.cli import xkcd
     from xkcd_display.display import XKCDDisplayService
 
@@ -64,7 +64,7 @@ def test_xkcd_stop_not_running(mocker):
     mocker.patch.object(XKCDDisplayService, "stop")
 
     runner = CliRunner()
-    result = runner.invoke(xkcd, ["stop"])
+    result = runner.invoke(xkcd, ["quit"])
 
     assert result.exit_code == 0
     assert "running" in result.output
@@ -131,6 +131,78 @@ def test_xkcd_reload_not_running(mocker):
 
     runner = CliRunner()
     result = runner.invoke(xkcd, ["reload"])
+
+    assert result.exit_code == 0
+    assert "not running" in result.output
+    assert XKCDDisplayService.is_running.call_count == 1
+    assert XKCDDisplayService.is_running.call_args == call()
+    assert XKCDDisplayService.send_signal.call_count == 0
+
+
+def test_xkcd_play_running(mocker):
+    from xkcd_display.cli import xkcd
+    from xkcd_display.display import XKCDDisplayService
+    import signal
+
+    mocker.patch.object(XKCDDisplayService, "is_running", return_value=True)
+    mocker.patch.object(XKCDDisplayService, "send_signal")
+
+    runner = CliRunner()
+    result = runner.invoke(xkcd, ["play"])
+
+    assert result.exit_code == 0
+    assert "showing" in result.output
+    assert XKCDDisplayService.is_running.call_count == 1
+    assert XKCDDisplayService.is_running.call_args == call()
+    assert XKCDDisplayService.send_signal.call_count == 1
+    assert XKCDDisplayService.send_signal.call_args == call(signal.SIGUSR1)
+
+
+def test_xkcd_play_not_running(mocker):
+    from xkcd_display.cli import xkcd
+    from xkcd_display.display import XKCDDisplayService
+
+    mocker.patch.object(XKCDDisplayService, "is_running", return_value=False)
+    mocker.patch.object(XKCDDisplayService, "send_signal")
+
+    runner = CliRunner()
+    result = runner.invoke(xkcd, ["play"])
+
+    assert result.exit_code == 0
+    assert "not running" in result.output
+    assert XKCDDisplayService.is_running.call_count == 1
+    assert XKCDDisplayService.is_running.call_args == call()
+    assert XKCDDisplayService.send_signal.call_count == 0
+
+
+def test_xkcd_pause_running(mocker):
+    from xkcd_display.cli import xkcd
+    from xkcd_display.display import XKCDDisplayService
+    import signal
+
+    mocker.patch.object(XKCDDisplayService, "is_running", return_value=True)
+    mocker.patch.object(XKCDDisplayService, "send_signal")
+
+    runner = CliRunner()
+    result = runner.invoke(xkcd, ["pause"])
+
+    assert result.exit_code == 0
+    assert "pausing" in result.output
+    assert XKCDDisplayService.is_running.call_count == 1
+    assert XKCDDisplayService.is_running.call_args == call()
+    assert XKCDDisplayService.send_signal.call_count == 1
+    assert XKCDDisplayService.send_signal.call_args == call(signal.SIGUSR2)
+
+
+def test_xkcd_pause_not_running(mocker):
+    from xkcd_display.cli import xkcd
+    from xkcd_display.display import XKCDDisplayService
+
+    mocker.patch.object(XKCDDisplayService, "is_running", return_value=False)
+    mocker.patch.object(XKCDDisplayService, "send_signal")
+
+    runner = CliRunner()
+    result = runner.invoke(xkcd, ["pause"])
 
     assert result.exit_code == 0
     assert "not running" in result.output
