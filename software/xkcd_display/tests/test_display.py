@@ -93,7 +93,6 @@ def test_display_dialog(tmp_path, mocker):
 
 def test_display_dialog_exit_on_sigterm(tmp_path, mocker):
     from xkcd_display.display import XKCDDisplayService
-    from xkcd_display.dialog import SpokenText
 
     mocker.patch.object(XKCDDisplayService, "_display_image")
     mocker.patch.object(XKCDDisplayService, "got_sigterm", return_value=True)
@@ -125,7 +124,7 @@ def test_display_image(mocker, img_nr, refresh):
     assert render_xkcd_image_as_pixels.call_args == call("*sigh*")
     assert EPDummy.show_and_move.call_count == 1
     assert EPDummy.show_and_move.call_args == call(
-        ANY, quick_refresh=refresh, move_to=9
+        ANY, quick_refresh=refresh, move_to=10
     )
 
 
@@ -147,7 +146,10 @@ def test_run_no_reload(tmp_path, mocker):
         XKCDDisplayService, "got_sigterm", side_effect=[False, False, True]
     )
     mocker.patch.object(
-        XKCDDisplayService, "got_signal", side_effect=[False, False]
+        XKCDDisplayService,
+        "got_signal",
+        # groups of three: SIGHUP (reload), SIGUSR2 (pause), SIGUSR1 (play)
+        side_effect=[False, False, True, False, False, False],
     )
     mocker.patch.object(XKCDDisplayService, "_display_dialog")
     mocker.patch.object(XKCDDisplayService, "_show_break_picture")
@@ -164,10 +166,14 @@ def test_run_no_reload(tmp_path, mocker):
         call(),
         call(),
     ]
-    assert XKCDDisplayService.got_signal.call_count == 2
+    assert XKCDDisplayService.got_signal.call_count == 6
     assert XKCDDisplayService.got_signal.call_args_list == [
         call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
         call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
     ]
     assert XKCDDisplayService._display_dialog.call_count == 2
     assert XKCDDisplayService._display_dialog.call_args_list == [
@@ -196,7 +202,10 @@ def test_run_with_reload(tmp_path, mocker):
         XKCDDisplayService, "got_sigterm", side_effect=[False, False, True]
     )
     mocker.patch.object(
-        XKCDDisplayService, "got_signal", side_effect=[True, False]
+        XKCDDisplayService,
+        "got_signal",
+        # groups of three: SIGHUP (reload), SIGUSR2 (pause), SIGUSR1 (play)
+        side_effect=[True, False, True, False, False, False],
     )
     mocker.patch.object(XKCDDisplayService, "_display_dialog")
     mocker.patch.object(XKCDDisplayService, "_show_break_picture")
@@ -213,10 +222,14 @@ def test_run_with_reload(tmp_path, mocker):
         call(),
         call(),
     ]
-    assert XKCDDisplayService.got_signal.call_count == 2
+    assert XKCDDisplayService.got_signal.call_count == 6
     assert XKCDDisplayService.got_signal.call_args_list == [
         call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
         call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
     ]
     assert XKCDDisplayService._display_dialog.call_count == 2
     assert XKCDDisplayService._display_dialog.call_args_list == [
@@ -235,6 +248,62 @@ def test_run_with_reload(tmp_path, mocker):
         call(tmp_path),
         call(tmp_path),
     ]
+
+
+def test_run_play_then_pause(tmp_path, mocker):
+    from xkcd_display.display import XKCDDisplayService
+    import signal
+    import time
+
+    dialog_file = tmp_path / "123.txt"
+    dialog_file.write_text(EXAMPLE_DIALOG)
+
+    mocker.patch.object(
+        XKCDDisplayService, "got_sigterm", side_effect=[False, False, True]
+    )
+    mocker.patch.object(
+        XKCDDisplayService,
+        "got_signal",
+        # groups of three: SIGHUP (reload), SIGUSR2 (pause), SIGUSR1 (play)
+        side_effect=[False, False, True, False, True, False],
+    )
+    mocker.patch.object(XKCDDisplayService, "_display_dialog")
+    mocker.patch.object(XKCDDisplayService, "_show_break_picture")
+    mocker.patch.object(XKCDDisplayService, "_show_goodbye_picture")
+    mocker.patch.object(
+        XKCDDisplayService, "_get_dialog_files", return_value=[dialog_file]
+    )
+    mocker.patch.object(time, "sleep")
+
+    XKCDDisplayService(dialogs_directory=tmp_path).run()
+
+    assert XKCDDisplayService.got_sigterm.call_count == 3
+    assert XKCDDisplayService.got_sigterm.call_args_list == [
+        call(),
+        call(),
+        call(),
+    ]
+    assert XKCDDisplayService.got_signal.call_count == 6
+    assert XKCDDisplayService.got_signal.call_args_list == [
+        call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
+        call(signal.SIGHUP, clear=True),
+        call(signal.SIGUSR2, clear=True),
+        call(signal.SIGUSR1, clear=True),
+    ]
+    assert XKCDDisplayService._display_dialog.call_count == 1
+    assert XKCDDisplayService._display_dialog.call_args_list == [
+        call(dialog_file)
+    ]
+    assert XKCDDisplayService._show_break_picture.call_count == 1
+    assert XKCDDisplayService._show_break_picture.call_args_list == [
+        call(None, dialog_file)
+    ]
+    assert XKCDDisplayService._show_goodbye_picture.call_count == 1
+    assert XKCDDisplayService._show_goodbye_picture.call_args_list == call()
+    assert XKCDDisplayService._get_dialog_files.call_count == 1
+    assert XKCDDisplayService._get_dialog_files.call_args == call(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -262,7 +331,7 @@ def test_show_break_picture(mocker, old, new):
     assert new.stem in render_xkcd_image_as_pixels.call_args[0][0]
     assert EPDummy.show_and_move.call_count == 1
     assert EPDummy.show_and_move.call_args == call(
-        ANY, quick_refresh=False, move_to=7
+        ANY, quick_refresh=False, move_to=7.5
     )
     assert time.sleep.call_count == 1
     assert time.sleep.call_args == call(5)
@@ -276,11 +345,10 @@ def test_show_goodbye_picture(mocker):
         return_value="pixels",
     )
     mocker.patch("xkcd_display.epd_dummy.EPDummy.show_and_move")
-    mocker.patch("xkcd_display.epd_dummy.EPDummy.sleep")
 
     XKCDDisplayService()._show_goodbye_picture()
     from xkcd_display.renderer import render_xkcd_image_as_pixels
-    from xkcd_display.epd_dummy import RefreshDummy, EPDummy
+    from xkcd_display.epd_dummy import EPDummy
 
     assert render_xkcd_image_as_pixels.call_count == 1
     assert render_xkcd_image_as_pixels.call_args == call(
@@ -288,7 +356,5 @@ def test_show_goodbye_picture(mocker):
     )
     assert EPDummy.show_and_move.call_count == 1
     assert EPDummy.show_and_move.call_args == call(
-        ANY, quick_refresh=False, move_to=7
+        ANY, quick_refresh=False, move_to=7.5
     )
-    assert EPDummy.sleep.call_count == 1
-    assert EPDummy.sleep.call_args == call()
