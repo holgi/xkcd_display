@@ -67,9 +67,9 @@ def pause():
         click.echo("xkcd service not running")
 
 
-@xkcd.command(short_help="stop the xkcd display service")
-def stop():
-    """ stop the xkcd display service
+@xkcd.command(short_help="quit the xkcd display service")
+def quit():
+    """ quit the xkcd display service
 
     This will stop the display service after the last panel of the current
     dialog was displayed.
