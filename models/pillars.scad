@@ -17,8 +17,8 @@ module z_pillar(width=pillar_width, height=pillar_height, strength=pillar_streng
     // Plate
     difference() {
         cube([width, width, strength]); 
-        #translate([width/2 + strength/2, width/2, -1])
-        cylinder(h=strength+2, r=hole_radius, $fn=360);
+        translate([width/2 + strength/2, width/2, -1])
+            cylinder(h=strength+2, r=hole_radius, $fn=360);
         
     }
     // Wall
